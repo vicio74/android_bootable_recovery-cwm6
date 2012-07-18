@@ -286,6 +286,7 @@ static void draw_screen_locked(void)
         int total_rows = (gr_fb_height() / CHAR_HEIGHT) - (gr_get_height(surface) / CHAR_HEIGHT) - 1;
         int i = 0;
         int j = 0;
+        int offset = 0;         // offset of separating bar under menus
         int row = 0;            // current row that we are drawing on
 	if (show_menu) {
             gr_color(MENU_TEXT_COLOR);
@@ -453,6 +454,7 @@ static int input_callback(int fd, short revents, void *data)
     struct input_event ev;
     int ret;
     int fake_key = 0;
+    gr_surface surface = gVirtualKeys;
 
     ret = ev_get_input(fd, revents, &ev);
     if (ret)
