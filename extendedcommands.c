@@ -74,29 +74,37 @@ int install_zip(const char* packagefilepath)
     return 0;
 }
 
-char* INSTALL_MENU_ITEMS[] = {  "choose zip from internal sdcard",
-                                "choose zip from external sdcard",
-                                "apply /sdcard/update.zip",
-                                "toggle signature verification",
-                                NULL };
-#define ITEM_CHOOSE_ZIP_INT   0
-#define ITEM_CHOOSE_ZIP       1
-#define ITEM_APPLY_SDCARD     2
-#define ITEM_SIG_CHECK        3
+#define ITEM_CHOOSE_ZIP_INT 0
+#define ITEM_APPLY_SDCARD 1
+#define ITEM_SIG_CHECK 2
+#define ITEM_CHOOSE_ZIP 3
 
 void show_install_update_menu()
 {
-    static char* headers[] = {  "Apply update from .zip file on SD card",
+    static char* headers[] = { "Apply update from .zip file on SD card",
                                 "",
                                 NULL
     };
     
-    if (volume_for_path("/emmc") == NULL)
-        INSTALL_MENU_ITEMS[ITEM_CHOOSE_ZIP_INT] = NULL;
+    char* install_menu_items[] = { "choose zip from sdcard",
+                                    "apply /sdcard/update.zip",
+                                    "toggle signature verification",
+                                    NULL,
+                                    NULL };
+
+    char *other_sd = NULL;
+    if (volume_for_path("/sdcard") != NULL) {
+        other_sd = "/sdcard";
+        install_menu_items[3] = "choose zip from external sdcard";
+    }
+    else if (volume_for_path("/external_sd") != NULL) {
+        other_sd = "/external_sd";
+        install_menu_items[3] = "choose zip from external sdcard";
+    }
     
     for (;;)
     {
-        int chosen_item = get_menu_selection(headers, INSTALL_MENU_ITEMS, 0, 0);
+        int chosen_item = get_menu_selection(headers, install_menu_items, 0, 0);
         switch (chosen_item)
         {
             case ITEM_SIG_CHECK:
@@ -108,11 +116,12 @@ void show_install_update_menu()
                     install_zip(SDCARD_UPDATE_FILE);
                 break;
             }
-            case ITEM_CHOOSE_ZIP:
-                show_choose_zip_menu("/sdcard/");
-                break;
             case ITEM_CHOOSE_ZIP_INT:
                 show_choose_zip_menu("/emmc/");
+                break;
+            case ITEM_CHOOSE_ZIP:
+                if (other_sd != NULL)
+                    show_choose_zip_menu(other_sd);
                 break;
             default:
                 return;
@@ -823,22 +832,33 @@ void show_nandroid_advanced_restore_menu(const char* path)
 
 void show_nandroid_menu()
 {
-    static char* headers[] = {  "Nandroid",
+    static char* headers[] = { "Nandroid",
                                 "",
                                 NULL
     };
 
-    static char* list[] = { "backup to internal",
+    char* list[] = { "backup to internal",
                             "restore from internal",
-                            "advanced restore from interal",
-                            "backup to exernal sdcard",
-                            "restore from external sdcard",
-                            "advanced restore from external sdcard",
+                            "advanced restore from internal",
+                            NULL,
+                            NULL,
+                            NULL,
                             NULL
     };
 
-    if (volume_for_path("/emmc") == NULL)
-        list[3] = NULL;
+    char *other_sd = NULL;
+    if (volume_for_path("/sdcard") != NULL) {
+        other_sd = "/sdcard";
+        list[3] = "backup to external sdcard";
+        list[4] = "restore from external sdcard";
+        list[5] = "advanced restore from external sdcard";
+    }
+    else if (volume_for_path("/external_sd") != NULL) {
+        other_sd = "/external_sd";
+        list[3] = "backup to external sdcard";
+        list[4] = "restore from external sdcard";
+        list[5] = "advanced restore from external sdcard";
+    }
 
     int chosen_item = get_menu_selection(headers, list, 0, 0);
     switch (chosen_item)
@@ -876,20 +896,38 @@ void show_nandroid_menu()
                 {
                     struct timeval tp;
                     gettimeofday(&tp, NULL);
-                    sprintf(backup_path, "/sdcard/clockworkmod/backup/%d", tp.tv_sec);
+                    if (other_sd != NULL) {
+                        sprintf(backup_path, "/%s/clockworkmod/backup/%d", other_sd, tp.tv_sec);
+                    }
+                    else {
+                        break;
+                    }
                 }
                 else
                 {
-                    strftime(backup_path, sizeof(backup_path), "/sdcard/clockworkmod/backup/%F.%H.%M.%S", tmp);
+                    if (other_sd != NULL) {
+                        char tmp[PATH_MAX];
+                        strftime(tmp, sizeof(tmp), "/clockworkmod/backup/%F.%H.%M.%S", tmp);
+                        // this sprintf results in:
+                        // /emmc/clockworkmod/backup/%F.%H.%M.%S (time values are populated too)
+                        sprintf(backup_path, "%s/%s", other_sd, tmp);
+                    }
+                    else {
+                        break;
+                    }
                 }
                 nandroid_backup(backup_path);
             }
             break;
         case 4:
-            show_nandroid_restore_menu("/sdcard");
+            if (other_sd != NULL) {
+                show_nandroid_restore_menu(other_sd);
+            }
             break;
         case 5:
-            show_nandroid_advanced_restore_menu("/sdcard");
+            if (other_sd != NULL) {
+                show_nandroid_advanced_restore_menu(other_sd);
+            }
             break;
     }
 }
