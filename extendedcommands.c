@@ -93,12 +93,12 @@ void show_install_update_menu()
                                     NULL };
 
     char *other_sd = NULL;
-    if (volume_for_path("/sdcard") != NULL) {
-        other_sd = "/sdcard";
+    if (volume_for_path("/sdcard/") != NULL) {
+        other_sd = "/sdcard/";
         install_menu_items[3] = "choose zip from external sdcard";
     }
-    else if (volume_for_path("/external_sd") != NULL) {
-        other_sd = "/external_sd";
+    else if (volume_for_path("/external_sd/") != NULL) {
+        other_sd = "/external_sd/";
         install_menu_items[3] = "choose zip from external sdcard";
     }
     
