@@ -330,7 +330,7 @@ static void draw_screen_locked(void)
             }
 
             if (menu_items <= max_menu_rows)
-                offset = 1;
+                offset = 0;
 
             gr_fill(0, (row-offset)*CHAR_HEIGHT+CHAR_HEIGHT/2-1,
                     gr_fb_width(), (row-offset)*CHAR_HEIGHT+CHAR_HEIGHT/2+1);
