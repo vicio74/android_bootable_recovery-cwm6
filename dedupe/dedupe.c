@@ -10,7 +10,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/wait.h>
-
+#include <sys/time.h>
 
 #include <sys/types.h>
 #include <signal.h>
@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <paths.h>
 #include <sys/wait.h>
+
+#define DEDUPE_VERSION 2
 
 static int copy_file(const char *src, const char *dst) {
     char buf[4096];
@@ -92,7 +94,7 @@ static int do_sha256sum_file(const char* filename, unsigned char *rptr) {
 static int store_st(struct DEDUPE_STORE_CONTEXT *context, struct stat st, const char* s);
 
 void print_stat(struct DEDUPE_STORE_CONTEXT *context, char type, struct stat st, const char *f) {
-    fprintf(context->output_manifest, "%c\t%o\t%d\t%d\t%s\t", type, st.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID), st.st_uid, st.st_gid, f);
+    fprintf(context->output_manifest, "%c\t%o\t%d\t%d\t%lu\t%lu\t%lu\t%s\t", type, st.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID), st.st_uid, st.st_gid, st.st_atime, st.st_mtime, st.st_ctime, f);
 }
 
 static int store_file(struct DEDUPE_STORE_CONTEXT *context, struct stat st, const char* f) {
@@ -226,14 +228,6 @@ static int store_st(struct DEDUPE_STORE_CONTEXT *context, struct stat st, const 
     }
 }
 
-void get_full_path(char *out_path, char *rel_path) {
-    char tmp[PATH_MAX];
-    getcwd(tmp, PATH_MAX);
-    chdir(rel_path);
-    getcwd(out_path, PATH_MAX);
-    chdir(tmp);
-}
-
 static char* tokenize(char *out, const char* line, const char sep) {
     while (*line != sep) {
         if (*line == '\0') {
@@ -263,10 +257,10 @@ static int dec_to_oct(int dec) {
     return ret;
 }
 
-void recursive_delete_skip_gc(char* dirname) {
-    DIR *dp = opendir(dirname);
+void recursive_delete_skip_gc(char* d) {
+    DIR *dp = opendir(d);
     if (dp == NULL) {
-        fprintf(stderr, "Error opening directory: %s\n", dirname);
+        fprintf(stderr, "Error opening directory: %s\n", d);
         return;
     }
     struct dirent *ep;
@@ -280,7 +274,7 @@ void recursive_delete_skip_gc(char* dirname) {
         struct stat cst;
         int ret;
         char blob[PATH_MAX];
-        sprintf(blob, "%s/%s", dirname, ep->d_name);
+        sprintf(blob, "%s/%s", d, ep->d_name);
         if ((ret = lstat(blob, &cst))) {
             fprintf(stderr, "Error opening: %s\n", ep->d_name);
             continue;
@@ -295,6 +289,11 @@ void recursive_delete_skip_gc(char* dirname) {
         }
     }
     closedir(dp);
+}
+
+static int check_file(const char* f) {
+    struct stat cst;
+    return lstat(f, &cst);
 }
 
 int dedupe_main(int argc, char** argv) {
@@ -323,12 +322,13 @@ int dedupe_main(int argc, char** argv) {
 
         struct DEDUPE_STORE_CONTEXT context;
         context.output_manifest = fopen(argv[4], "wb");
+        fprintf(context.output_manifest, "dedupe\t%d\n", DEDUPE_VERSION);
         if (context.output_manifest == NULL) {
             fprintf(stderr, "Unable to open output file %s\n", argv[4]);
             return 1;
         }
         mkdir(argv[3], S_IRWXU | S_IRWXG | S_IRWXO);
-        get_full_path(context.blob_dir, argv[3]);
+        realpath(argv[3], context.blob_dir);
         chdir(argv[2]);
         context.excludes = argv + 5;
         context.exclude_count = argc - 5;
@@ -349,7 +349,7 @@ int dedupe_main(int argc, char** argv) {
 
         char blob_dir[PATH_MAX];
         char *output_dir = argv[4];
-        get_full_path(blob_dir, argv[3]);
+        realpath(argv[3], blob_dir);
 
         printf("%s\n" , output_dir);
         mkdir(output_dir, S_IRWXU | S_IRWXG | S_IRWXO);
@@ -359,6 +359,15 @@ int dedupe_main(int argc, char** argv) {
         }
 
         char line[PATH_MAX];
+        fgets(line, PATH_MAX, input_manifest);
+        int version = 1;
+        if (sscanf(line, "dedupe\t%d", &version) != 1) {
+            fseek(input_manifest, 0, SEEK_SET);
+        }
+        if (version > DEDUPE_VERSION) {
+            fprintf(stderr, "Attempting to restore newer dedupe file: %s\n", argv[2]);
+            return 1;
+        }
         while (fgets(line, PATH_MAX, input_manifest)) {
             //printf("%s", line);
 
@@ -366,6 +375,9 @@ int dedupe_main(int argc, char** argv) {
             char mode[8];
             char uid[32];
             char gid[32];
+            char at[32];
+            char mt[32];
+            char ct[32];
             char filename[PATH_MAX];
 
             char *token = line;
@@ -373,6 +385,11 @@ int dedupe_main(int argc, char** argv) {
             token = tokenize(mode, token, '\t');
             token = tokenize(uid, token, '\t');
             token = tokenize(gid, token, '\t');
+            if (version >= 2) {
+                token = tokenize(at, token, '\t');
+                token = tokenize(mt, token, '\t');
+                token = tokenize(ct, token, '\t');
+            }
             token = tokenize(filename, token, '\t');
 
             int mode_oct = dec_to_oct(atoi(mode));
@@ -424,6 +441,12 @@ int dedupe_main(int argc, char** argv) {
                 fclose(input_manifest);
                 return 1;
             }
+            if (version >= 2) {
+                struct timeval times[2];
+                times[0].tv_sec = atol(at);
+                times[1].tv_sec = atol(mt);
+                utimes(filename, times);
+            }
         }
 
         fclose(input_manifest);
@@ -436,14 +459,23 @@ int dedupe_main(int argc, char** argv) {
         }
         
         char blob_dir[PATH_MAX];
-        get_full_path(blob_dir, argv[2]);
+        realpath(argv[2], blob_dir);
+        if (check_file(blob_dir)) {
+            fprintf(stderr, "Unable to open blobs dir: %s\n", blob_dir);
+            return 1;
+        }
 
         char gc_dir[PATH_MAX];
         sprintf(gc_dir, "%s/%s", blob_dir, ".gc");
         mkdir(gc_dir, S_IRWXU | S_IRWXG | S_IRWXO);
+        if (check_file(gc_dir)) {
+            fprintf(stderr, "Unable to open gc dir: %s\n", gc_dir);
+            return 1;
+        }
 
         char blob[PATH_MAX];
         int i;
+        int failure = 0;
         for (i = 3; i < argc; i++) {
             FILE *input_manifest = fopen(argv[i], "rb");
             if (input_manifest == NULL) {
@@ -452,11 +484,25 @@ int dedupe_main(int argc, char** argv) {
             }
 
             char line[PATH_MAX];
+            fgets(line, PATH_MAX, input_manifest);
+            int version = 1;
+            if (sscanf(line, "dedupe\t%d", &version) != 1) {
+                fseek(input_manifest, 0, SEEK_SET);
+            }
+            if (version > DEDUPE_VERSION) {
+                fprintf(stderr, "Attempting to gc newer dedupe file: %s\n", argv[2]);
+                failure = 1;
+                fclose(input_manifest);
+                break;
+            }
             while (fgets(line, PATH_MAX, input_manifest)) {
                 char type[4];
                 char mode[8];
                 char uid[32];
                 char gid[32];
+                char at[32];
+                char mt[32];
+                char ct[32];
                 char filename[PATH_MAX];
 
                 char *token = line;
@@ -464,6 +510,11 @@ int dedupe_main(int argc, char** argv) {
                 token = tokenize(mode, token, '\t');
                 token = tokenize(uid, token, '\t');
                 token = tokenize(gid, token, '\t');
+                if (version >= 2) {
+                    token = tokenize(at, token, '\t');
+                    token = tokenize(mt, token, '\t');
+                    token = tokenize(ct, token, '\t');
+                }
                 token = tokenize(filename, token, '\t');
 
                 int mode_oct = dec_to_oct(atoi(mode));
@@ -493,7 +544,8 @@ int dedupe_main(int argc, char** argv) {
         }
 
         // rm -rf
-        recursive_delete_skip_gc(blob_dir);
+        if (!failure)
+            recursive_delete_skip_gc(blob_dir);
 
         // move .gc over
         char dst[PATH_MAX];
@@ -523,7 +575,7 @@ int dedupe_main(int argc, char** argv) {
         }
         closedir(dp);
 
-        return 0;
+        return failure;
     }
     else {
         usage(argv);
