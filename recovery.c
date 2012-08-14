@@ -487,25 +487,6 @@ get_menu_selection(char** headers, char** items, int menu_only,
         } else if (!menu_only) {
             chosen_item = action;
         }
-
-#ifndef BOARD_HAS_NO_SELECT_BUTTON
-#ifndef BOARD_TOUCH_RECOVERY
-        if (abs(selected - old_selected) > 1) {
-            wrap_count++;
-            if (wrap_count == 3) {
-                wrap_count = 0;
-                if (ui_get_showing_back_button()) {
-                    ui_print("Back menu button disabled.\n");
-                    ui_set_showing_back_button(0);
-                }
-                else {
-                    ui_print("Back menu button enabled.\n");
-                    ui_set_showing_back_button(1);
-                }
-            }
-        }
-#endif
-#endif
     }
 
     ui_end_menu();
@@ -765,6 +746,8 @@ int
 main(int argc, char **argv) {
     if (strcmp(basename(argv[0]), "recovery") != 0)
     {
+        if (strstr(argv[0], "minizip") != NULL)
+            return minizip_main(argc, argv);
         if (strstr(argv[0], "dedupe") != NULL)
             return dedupe_main(argc, argv);
         if (strstr(argv[0], "flash_image") != NULL)
