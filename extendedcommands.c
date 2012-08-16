@@ -440,7 +440,7 @@ void show_nandroid_delete_menu(const char* path)
 void show_mount_usb_storage_menu()
 {
     int fd;
-    Volume *vol = volume_for_path(DEVICE_DEFAULT_STORAGE);
+    Volume *vol = volume_for_path("/emmc");
     if ((fd = open(BOARD_UMS_LUNFILE, O_WRONLY)) < 0) {
         LOGE("Unable to open ums lunfile (%s)", strerror(errno));
         return -1;

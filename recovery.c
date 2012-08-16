@@ -657,8 +657,6 @@ wipe_data(int confirm) {
         }
     }
 
-    char android_secure[50];
-    sprintf (android_secure, "%s/.android_secure", DEVICE_DEFAULT_STORAGE);
     ui_print("\n-- Wiping data...\n");
     device_wipe_data();
     erase_volume("/data");
@@ -667,7 +665,7 @@ wipe_data(int confirm) {
         erase_volume("/datadata");
     }
     erase_volume("/sd-ext");
-    erase_volume(android_secure);
+    erase_volume("/emmc/.android_secure");
     ui_print("Data wipe complete.\n");
 }
 

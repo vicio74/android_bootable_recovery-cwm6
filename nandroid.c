@@ -241,9 +241,7 @@ int nandroid_backup_partition_extended(const char* backup_path, const char* moun
     char* name = basename(mount_point);
 
     struct stat file_info;
-    char hide_nandroid_progress[50];
-    sprintf(hide_nandroid_progress, "%s/clockworkmod/.hidenandroidprogress", DEVICE_DEFAULT_STORAGE);
-    int callback = stat(hide_nandroid_progress, &file_info) != 0;
+    int callback = stat("/sdcard/clockworkmod/.hidenandroidprogress", &file_info) != 0;
 
     ui_print("Backing up %s...\n", name);
     if (0 != (ret = ensure_path_mounted(mount_point) != 0)) {
@@ -362,16 +360,15 @@ int nandroid_backup(const char* backup_path)
         if (0 != (ret = nandroid_backup_partition(backup_path, "/datadata")))
             return ret;
     }
-    char android_secure[50];
-    sprintf(android_secure, "%s/.android_secure", DEVICE_DEFAULT_STORAGE);
-    ensure_path_mounted(DEVICE_DEFAULT_STORAGE);
-    if (0 != stat(android_secure, &s))
+
+    ensure_path_mounted("/emmc")
+    if (0 != stat("/emmc/.android_secure", &s))
     {
-        ui_print("No .android_secure folder found on default storage. Skipping backup of applications on default storage.\n");
+        ui_print("No /emmc/.android_secure found. Skipping backup of applications on external storage.\n");
     }
     else
     {
-        if (0 != (ret = nandroid_backup_partition_extended(backup_path, android_secure, 0)))
+        if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/emmc/.android_secure", 0)))
             return ret;
     }
 
@@ -559,9 +556,7 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* mou
 
     ensure_directory(mount_point);
 
-    char hide_nandroid_progress[50];
-    sprintf(hide_nandroid_progress, "%s/clockworkmod/.hidenandroidprogress", DEVICE_DEFAULT_STORAGE);
-    int callback = stat(hide_nandroid_progress, &file_info) != 0;
+    int callback = stat("/sdcard/clockworkmod/.hidenandroidprogress", &file_info) != 0;
 
     ui_print("Restoring %s...\n", name);
     if (backup_filesystem == NULL) {
@@ -688,9 +683,7 @@ int nandroid_restore(const char* backup_path, int restore_boot, int restore_syst
             return ret;
     }
 
-    char android_secure[50];
-    sprintf(android_secure, "%s/.android_secure", DEVICE_DEFAULT_STORAGE);
-    if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, android_secure, 0)))
+    if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/emmc/.android_secure", 0)))
         return ret;
 
     if (restore_cache && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/cache", 0)))
