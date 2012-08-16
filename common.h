@@ -166,8 +166,3 @@ int ui_is_showing_back_button();
 #define DEVICE_DEFAULT_STORAGE   "/sdcard"
 #endif
 
-#ifdef	BOARD_ANDROID_SECURE_EMMC
-#define	DEVICE_ANDROID_SECURE_LOCATION	"/emmc"
-#else
-#define	DEVICE_ANDROID_SECURE_LOCATION	"/sdcard"
-#endif

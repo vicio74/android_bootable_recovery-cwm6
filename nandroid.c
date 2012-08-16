@@ -363,8 +363,8 @@ int nandroid_backup(const char* backup_path)
             return ret;
     }
     char android_secure[50];
-    sprintf(android_secure, "%s/.android_secure", DEVICE_ANDROID_SECURE_LOCATION);
-    ensure_path_mounted(DEVICE_ANDROID_SECURE_LOCATION);
+    sprintf(android_secure, "%s/.android_secure", DEVICE_DEFAULT_STORAGE);
+    ensure_path_mounted(DEVICE_DEFAULT_STORAGE);
     if (0 != stat(android_secure, &s))
     {
         ui_print("No .android_secure folder found on default storage. Skipping backup of applications on default storage.\n");
@@ -689,7 +689,7 @@ int nandroid_restore(const char* backup_path, int restore_boot, int restore_syst
     }
 
     char android_secure[50];
-    sprintf(android_secure, "%s/.android_secure", DEVICE_ANDROID_SECURE_LOCATION);
+    sprintf(android_secure, "%s/.android_secure", DEVICE_DEFAULT_STORAGE);
     if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, android_secure, 0)))
         return ret;
 

@@ -658,7 +658,7 @@ wipe_data(int confirm) {
     }
 
     char android_secure[50];
-    sprintf (android_secure, "%s/.android_secure", DEVICE_ANDROID_SECURE_LOCATION);
+    sprintf (android_secure, "%s/.android_secure", DEVICE_DEFAULT_STORAGE);
     ui_print("\n-- Wiping data...\n");
     device_wipe_data();
     erase_volume("/data");
