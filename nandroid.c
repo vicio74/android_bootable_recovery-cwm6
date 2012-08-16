@@ -361,13 +361,13 @@ int nandroid_backup(const char* backup_path)
             return ret;
     }
 
-    if (0 != stat("/sdcard/.android_secure", &s))
+    if (0 != stat("/emmc/.android_secure", &s))
     {
-        ui_print("No /sdcard/.android_secure found. Skipping backup of applications on external storage.\n");
+        ui_print("No /emmc/.android_secure found. Skipping backup of applications on external storage.\n");
     }
     else
     {
-        if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/sdcard/.android_secure", 0)))
+        if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/emmc/.android_secure", 0)))
             return ret;
     }
 
@@ -555,7 +555,7 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* mou
 
     ensure_directory(mount_point);
 
-    int callback = stat("/sdcard/clockworkmod/.hidenandroidprogress", &file_info) != 0;
+    int callback = stat("/emmc/clockworkmod/.hidenandroidprogress", &file_info) != 0;
 
     ui_print("Restoring %s...\n", name);
     if (backup_filesystem == NULL) {
@@ -682,7 +682,7 @@ int nandroid_restore(const char* backup_path, int restore_boot, int restore_syst
             return ret;
     }
 
-    if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/sdcard/.android_secure", 0)))
+    if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/emmc/.android_secure", 0)))
         return ret;
 
     if (restore_cache && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/cache", 0)))
