@@ -159,3 +159,15 @@ int ui_get_selected_item();
 int ui_is_showing_back_button();
 
 #endif  // RECOVERY_COMMON_H
+
+#ifdef  BOARD_DEFAULT_STORAGE_EMMC
+#define DEVICE_DEFAULT_STORAGE  "/emmc"
+#else
+#define DEVICE_DEFAULT_STORAGE   "/sdcard"
+#endif
+
+#ifdef	BOARD_ANDROID_SECURE_EMMC
+#define	DEVICE_ANDROID_SECURE_LOCATION	"/emmc"
+#else
+#define	DEVICE_ANDROID_SECURE_LOCATION	"/sdcard"
+#endif

@@ -156,7 +156,9 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
             free(path);
             return StringValue(strdup(""));
         }
-        if (0 != format_volume("/emmc/.android_secure")) {
+	char android_secure[50];
+	sprintf(android_secure, "%s/.android_secure", DEVICE_ANDROID_SECURE_LOCATION);
+        if (0 != format_volume(android_secure)) {
             free(path);
             return StringValue(strdup(""));
         }
