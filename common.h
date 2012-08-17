@@ -131,6 +131,9 @@ typedef struct {
     const char* fs_options;
 
     const char* fs_options2;
+
+    const char* lun;          // (/sdcard, /emmc, /external_sd only) LUN file to
+                              // use when mounting via USB mass storage
 } Volume;
 
 typedef struct {
@@ -159,4 +162,3 @@ int ui_get_selected_item();
 int ui_is_showing_back_button();
 
 #endif  // RECOVERY_COMMON_H
-

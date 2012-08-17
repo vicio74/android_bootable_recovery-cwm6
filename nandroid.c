@@ -361,7 +361,7 @@ int nandroid_backup(const char* backup_path)
             return ret;
     }
 
-    ensure_path_mounted("/emmc")
+    ensure_path_mounted("/emmc");
     if (0 != stat("/emmc/.android_secure", &s))
     {
         ui_print("No /emmc/.android_secure found. Skipping backup of applications on external storage.\n");
