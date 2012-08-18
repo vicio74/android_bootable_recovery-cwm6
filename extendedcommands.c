@@ -1264,6 +1264,7 @@ void show_advanced_menu()
                             "key test",
                             "show log",
                             "fix permissions",
+			    "disable install-recovery.sh",
                             NULL
     };
 
@@ -1325,8 +1326,25 @@ void show_advanced_menu()
                 __system("fix_permissions");
                 ui_print("Done!\n");
                 break;
+	    case 8:
+	    	if (ensure_path_mounted("/system") != 0)
+        	return 0;
+		int ret = 0;
+    		struct stat st;
+    		if (0 == lstat("/system/etc/install-recovery.sh", &st)) {
+        	if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+            	ui_show_text(1);
+            	ret = 1;
+            	if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
+                __system("chmod -x /system/etc/install-recovery.sh");
+            }
         }
     }
+	    	ensure_path_unmounted("/system");
+    		return ret;
+		break;
+      }
+   }
 }
 
 void write_fstab_root(char *path, FILE *file)
