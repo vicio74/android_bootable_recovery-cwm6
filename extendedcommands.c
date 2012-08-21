@@ -16,6 +16,7 @@
 #include <sys/limits.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/statfs.h>
 
 #include <signal.h>
 #include <sys/wait.h>
@@ -594,10 +595,10 @@ void show_mount_usb_storage_menu()
 int confirm_selection(const char* title, const char* confirm)
 {
     struct stat info;
-    if (0 == stat("/sdcard/clockworkmod/.no_confirm", &info))
+    if (0 == stat("/emmc/clockworkmod/.no_confirm", &info))
         return 1;
 
-    char* confirm_headers[]  = {  title, "  THIS CAN NOT BE UNDONE.", "", NULL };
+    char* confirm_headers[]  = {  title, "  Confirm?.", "", NULL };
     if (0 == stat("/emmc/clockworkmod/.one_confirm", &info)) {
         char* items[] = { "No",
                         confirm, //" Yes -- wipe partition",   // [1]
@@ -1264,7 +1265,6 @@ void show_advanced_menu()
                             "key test",
                             "show log",
                             "fix permissions",
-			    "disable install-recovery.sh",
                             NULL
     };
 
@@ -1326,26 +1326,132 @@ void show_advanced_menu()
                 __system("fix_permissions");
                 ui_print("Done!\n");
                 break;
-	    case 8:
-	    	if (ensure_path_mounted("/system") != 0)
-        	return 0;
-		int ret = 0;
-    		struct stat st;
-    		if (0 == lstat("/system/etc/install-recovery.sh", &st)) {
-        	if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-            	ui_show_text(1);
-            	ret = 1;
-            	if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
+      }
+   }
+}
+
+void show_extras_menu()
+{
+    static char* headers[] = {  "Extras Menu",
+                                "",
+                                NULL
+    };
+
+    static char* list[] = { "disable install-recovery.sh",
+//                            "keep root (/system/bin/su)",  // TODO: add these later
+//                            "keep root (/system/xbin/su)",
+                            "enable one confirm",  // TODO: find way to disable/enable these in one menu item
+			    "disable one confirm",
+                            "hide backup & restore progress (faster)",
+			    "show backup & restore progress (slower)",
+			    "recovery info",
+                            NULL
+    };
+
+    for (;;)
+    {
+        int chosen_item = get_filtered_menu_selection(headers, list, 0, 0, sizeof(list) / sizeof(char*));
+        if (chosen_item == GO_BACK)
+            break;
+        switch (chosen_item)
+        {
+            case 0:
+                if (ensure_path_mounted("/system") != 0)
+                return 0;
+                int ret = 0;
+                struct stat st;
+                if (0 == lstat("/system/etc/install-recovery.sh", &st)) {
+                if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+                ui_show_text(1);
+                ret = 1;
+                if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
                 __system("chmod -x /system/etc/install-recovery.sh");
             }
         }
     }
-	    	ensure_path_unmounted("/system");
-    		return ret;
+                ensure_path_unmounted("/system");
+                return ret;
+                break;
+//	    case 1:
+//                if (ensure_path_mounted("/system") != 0)
+//		int ret = 0;
+//                struct stat st;
+//    		if (0 == lstat("/system/bin/su", &st)) {
+//        	if (S_ISREG(st.st_mode)) {
+//            	if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
+//                ui_show_text(1);
+//                ret = 1;
+//                if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/bin/su)")) {
+//                    __system("chmod 6755 /system/bin/su");
+//            }
+//        }
+//    }
+//                ensure_path_unmounted("/system");
+//                return ret;
+//                break;
+//	    case 2:
+//                if (ensure_path_mounted("/system") != 0)
+//                return 0;
+//    		if (0 == lstat("/system/xbin/su", &st)) {
+//        	if (S_ISREG(st.st_mode)) {
+//            	if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
+//                ui_show_text(1);
+//                ret = 1;
+//                if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/xbin/su)")) {
+//                    __system("chmod 6755 /system/xbin/su");
+ //           }
+//       }
+//    }
+//                ensure_path_unmounted("/system");
+//                return ret;
+//                break;
+	    case 1:
+		ensure_path_mounted("/emmc");
+//   		struct statfs s;
+//		if (confirm_selection( "Confirm enable/disable one_confirm feature?", "Yes - Enable/Disable")) {
+//    		   if (0 != stat("/emmc/clockworkmod/.one_confirm", &s)) {
+                   __system("touch /emmc/clockworkmod/.one_confirm");
+                   ui_print("/emmc/clockworkmod/.one_confirm created\n");
+//		   }
+//		}
+//		else
+//		{
+//                   __system("rm -rf /emmc/clockworkmod/.one_confirm");
+//                   ui_print("/emmc/clockworkmod/.one_confirm deleted.\n");
+//		}
 		break;
-      }
-   }
+	    case 2:
+                ensure_path_mounted("/emmc");
+//                if (confirm_selection( "Confirm hide/show backup & restore progress?", "Yes - Hide/Show")) {
+//                   if (0 != stat("/emmc/clockworkmod/.hidenandroidprogress", &s)) {
+                   __system("rm -rf /emmc/clockworkmod/.one_confirm");
+                   ui_print("/emmc/clockworkmod/.one_confirm deleted\n");
+//                   }
+//                }
+//                else
+//                {
+//                   __system("rm -rf /emmc/clockworkmod/.hidenandroidprogress");
+//                   ui_print("/emmc/clockworkmod/.hidenandroidprogress deleted.\n");
+//                }
+                break;
+	    case 3:
+                ensure_path_mounted("/emmc");
+                   __system("touch /emmc/clockworkmod/.hidenandroidprogress");
+                   ui_print("/emmc/clockworkmod/.hidenandroidprogress created\n");
+		break;
+	    case 4:
+                ensure_path_mounted("/emmc");
+                   __system("rm -rf /emmc/clockworkmod/.hidenandroidprogress");
+                   ui_print("/emmc/clockworkmod/.hidenandroidprogress deleted\n");
+		break;
+	    case 5:
+		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v10\n");
+		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
+		ui_print("Build Date: 08/20/2012 6:00 pm\n");
+	}
+    }
 }
+
 
 void write_fstab_root(char *path, FILE *file)
 {

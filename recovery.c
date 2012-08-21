@@ -632,7 +632,7 @@ wipe_data(int confirm) {
 
         if (title_headers == NULL) {
             char* headers[] = { "Confirm wipe of all user data?",
-                                "  THIS CAN NOT BE UNDONE.",
+                                "  Confirm?.",
                                 "",
                                 NULL };
             title_headers = prepend_title((const char**)headers);
@@ -729,7 +729,11 @@ prompt_and_wait() {
             case ITEM_ADVANCED:
                 show_advanced_menu();
                 break;
-                
+
+	    case ITEM_EXTRAS:
+		show_extras_menu();
+		break;
+
             case ITEM_POWEROFF:
                 poweroff = 1;
                 return;
