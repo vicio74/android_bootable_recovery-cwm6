@@ -1338,12 +1338,12 @@ void show_extras_menu()
     };
 
     static char* list[] = { "disable install-recovery.sh",
-//                            "keep root (/system/bin/su)",  // TODO: add these later
-//                            "keep root (/system/xbin/su)",
                             "enable one confirm",  // TODO: find way to disable/enable these in one menu item
 			    "disable one confirm",
                             "hide backup & restore progress (faster)",
 			    "show backup & restore progress (slower)",
+//                            "keep root (/system/bin/su)",  // TODO: add these later
+//                            "keep root (/system/xbin/su)",
 			    "recovery info",
                             NULL
     };
@@ -1372,46 +1372,13 @@ void show_extras_menu()
                 ensure_path_unmounted("/system");
                 return ret;
                 break;
-//	    case 1:
-//                if (ensure_path_mounted("/system") != 0)
-//		int ret = 0;
-//                struct stat st;
-//    		if (0 == lstat("/system/bin/su", &st)) {
-//        	if (S_ISREG(st.st_mode)) {
-//            	if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
-//                ui_show_text(1);
-//                ret = 1;
-//                if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/bin/su)")) {
-//                    __system("chmod 6755 /system/bin/su");
-//            }
-//        }
-//    }
-//                ensure_path_unmounted("/system");
-//                return ret;
-//                break;
-//	    case 2:
-//                if (ensure_path_mounted("/system") != 0)
-//                return 0;
-//    		if (0 == lstat("/system/xbin/su", &st)) {
-//        	if (S_ISREG(st.st_mode)) {
-//            	if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
-//                ui_show_text(1);
-//                ret = 1;
-//                if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/xbin/su)")) {
-//                    __system("chmod 6755 /system/xbin/su");
- //           }
-//       }
-//    }
-//                ensure_path_unmounted("/system");
-//                return ret;
-//                break;
 	    case 1:
 		ensure_path_mounted("/emmc");
 //   		struct statfs s;
 //		if (confirm_selection( "Confirm enable/disable one_confirm feature?", "Yes - Enable/Disable")) {
 //    		   if (0 != stat("/emmc/clockworkmod/.one_confirm", &s)) {
                    __system("touch /emmc/clockworkmod/.one_confirm");
-                   ui_print("/emmc/clockworkmod/.one_confirm created\n");
+                   ui_print("one confirm enabled\n");
 //		   }
 //		}
 //		else
@@ -1425,7 +1392,7 @@ void show_extras_menu()
 //                if (confirm_selection( "Confirm hide/show backup & restore progress?", "Yes - Hide/Show")) {
 //                   if (0 != stat("/emmc/clockworkmod/.hidenandroidprogress", &s)) {
                    __system("rm -rf /emmc/clockworkmod/.one_confirm");
-                   ui_print("/emmc/clockworkmod/.one_confirm deleted\n");
+                   ui_print("one confirm disabled\n");
 //                   }
 //                }
 //                else
@@ -1437,13 +1404,46 @@ void show_extras_menu()
 	    case 3:
                 ensure_path_mounted("/emmc");
                    __system("touch /emmc/clockworkmod/.hidenandroidprogress");
-                   ui_print("/emmc/clockworkmod/.hidenandroidprogress created\n");
+                   ui_print("hide nandroid progress enabled\n");
 		break;
 	    case 4:
                 ensure_path_mounted("/emmc");
                    __system("rm -rf /emmc/clockworkmod/.hidenandroidprogress");
-                   ui_print("/emmc/clockworkmod/.hidenandroidprogress deleted\n");
+                   ui_print("hide nandroid progress disabled\n");
 		break;
+//	    case 5:
+//		(ensure_path_mounted("/system")
+//    		int ret = 0;
+//    		struct stat st;
+//    		if (0 == lstat("/system/bin/su", &st)) {
+//        	    if (S_ISREG(st.st_mode)) {
+//            	        if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
+//                	    ui_show_text(1);
+//                	    ret = 1;
+//                	    if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/bin/su)")) {
+//                    		__system("chmod 6755 /system/bin/su");
+//            }
+//        }
+//    }
+//    		ensure_path_unmounted("/system");
+//    		return ret;
+//		break;
+//	    case 6:
+//		(ensure_path_mounted("/system")
+//    		int ret = 0;
+//    		struct stat st;
+//    		if (0 == lstat("/system/xbin/su", &st)) {
+//        	    if (S_ISREG(st.st_mode)) {
+//            	        if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
+//                	ui_show_text(1);
+//                	ret = 1;
+//                	if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/xbin/su)")) {
+//                    	    __system("chmod 6755 /system/xbin/su");
+//            }
+//        }
+//    }
+//    		ensure_path_unmounted("/system");
+//    		return ret;
 	    case 5:
 		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v10\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
