@@ -1265,6 +1265,7 @@ void show_advanced_menu()
                             "key test",
                             "show log",
                             "fix permissions",
+			    "sk8's fix permissions",
                             NULL
     };
 
@@ -1322,10 +1323,18 @@ void show_advanced_menu()
             case 7:
                 ensure_path_mounted("/system");
                 ensure_path_mounted("/data");
+                ensure_path_mounted("/emmc");
                 ui_print("Fixing permissions...\n");
                 __system("fix_permissions");
                 ui_print("Done!\n");
                 break;
+	    case 8:
+               	ensure_path_mounted("/system");
+                ensure_path_mounted("/data");
+                ui_print("Fixing permissions & removing stale directories (logging disabled)...\n");
+                __system("fix_permissions -l -r");
+                ui_print("Done!\n");
+		break;
       }
    }
 }
