@@ -240,6 +240,7 @@ int nandroid_backup_partition_extended(const char* backup_path, const char* moun
     int ret = 0;
     char* name = basename(mount_point);
 
+    ensure_path_mounted("/emmc");
     struct stat file_info;
     int callback = stat("/emmc/clockworkmod/.hidenandroidprogress", &file_info) != 0;
 
@@ -556,6 +557,7 @@ int nandroid_restore_partition_extended(const char* backup_path, const char* mou
 
     ensure_directory(mount_point);
 
+    ensure_path_mounted("/emmc");
     int callback = stat("/emmc/clockworkmod/.hidenandroidprogress", &file_info) != 0;
 
     ui_print("Restoring %s...\n", name);

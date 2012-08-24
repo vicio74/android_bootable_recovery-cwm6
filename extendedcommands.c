@@ -594,10 +594,12 @@ void show_mount_usb_storage_menu()
 
 int confirm_selection(const char* title, const char* confirm)
 {
+    ensure_path_mounted("/emmc");
     struct stat info;
     if (0 == stat("/emmc/clockworkmod/.no_confirm", &info))
         return 1;
 
+    ensure_path_mounted("/emmc");
     char* confirm_headers[]  = {  title, "  Confirm?.", "", NULL };
     if (0 == stat("/emmc/clockworkmod/.one_confirm", &info)) {
         char* items[] = { "No",
@@ -1347,10 +1349,8 @@ void show_extras_menu()
     };
 
     static char* list[] = { "disable install-recovery.sh",
-                            "enable one confirm",  // TODO: find way to disable/enable these in one menu item
-			    "disable one confirm",
-                            "hide backup & restore progress (faster)",
-			    "show backup & restore progress (slower)",
+                            "enable/disable one confirm",
+                            "hide/show backup & restore progress",
 //                            "keep root (/system/bin/su)",  // TODO: add these later
 //                            "keep root (/system/xbin/su)",
 			    "file manager",
@@ -1384,44 +1384,25 @@ void show_extras_menu()
                 break;
 	    case 1:
 		ensure_path_mounted("/emmc");
-//   		struct statfs s;
-//		if (confirm_selection( "Confirm enable/disable one_confirm feature?", "Yes - Enable/Disable")) {
-//    		   if (0 != stat("/emmc/clockworkmod/.one_confirm", &s)) {
+                if( access("/emmc/clockworkmod/.one_confirm", F_OK ) != -1 ) {
+                   __system("rm -rf /emmc/clockworkmod/.one_confirm");
+                   ui_print("one confirm disabled\n");
+                } else {
                    __system("touch /emmc/clockworkmod/.one_confirm");
                    ui_print("one confirm enabled\n");
-//		   }
-//		}
-//		else
-//		{
-//                   __system("rm -rf /emmc/clockworkmod/.one_confirm");
-//                   ui_print("/emmc/clockworkmod/.one_confirm deleted.\n");
-//		}
+                }
 		break;
 	    case 2:
                 ensure_path_mounted("/emmc");
-//                if (confirm_selection( "Confirm hide/show backup & restore progress?", "Yes - Hide/Show")) {
-//                   if (0 != stat("/emmc/clockworkmod/.hidenandroidprogress", &s)) {
-                   __system("rm -rf /emmc/clockworkmod/.one_confirm");
-                   ui_print("one confirm disabled\n");
-//                   }
-//                }
-//                else
-//                {
-//                   __system("rm -rf /emmc/clockworkmod/.hidenandroidprogress");
-//                   ui_print("/emmc/clockworkmod/.hidenandroidprogress deleted.\n");
-//                }
-                break;
-	    case 3:
-                ensure_path_mounted("/emmc");
-                   __system("touch /emmc/clockworkmod/.hidenandroidprogress");
-                   ui_print("hide nandroid progress enabled\n");
-		break;
-	    case 4:
-                ensure_path_mounted("/emmc");
+                if( access("/emmc/clockworkmod/.hidenandroidprogress", F_OK ) != -1 ) {
                    __system("rm -rf /emmc/clockworkmod/.hidenandroidprogress");
-                   ui_print("hide nandroid progress disabled\n");
-		break;
-//	    case 5:
+                   ui_print("nandroid progress will be shown\n");
+                } else {
+                   __system("touch /emmc/clockworkmod/.hidenandroidprogress");
+                   ui_print("nandroid progress will be hidden\n");
+                }
+                break;
+//	    case 3:
 //		(ensure_path_mounted("/system")
 //    		int ret = 0;
 //    		struct stat st;
@@ -1438,7 +1419,7 @@ void show_extras_menu()
 //    		ensure_path_unmounted("/system");
 //    		return ret;
 //		break;
-//	    case 6:
+//	    case 4:
 //		(ensure_path_mounted("/system")
 //    		int ret = 0;
 //    		struct stat st;
@@ -1455,16 +1436,20 @@ void show_extras_menu()
 //    		ensure_path_unmounted("/system");
 //    		return ret;
 //		break;
-	    case 5:
+	    case 3:
 		ensure_path_mounted("/emmc");
+		if( access( "/emmc/clockworkmod/.aromafm/aromafm.zip", F_OK ) != -1) {
+                install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
+		} else {
 		__system("mkdir -p /emmc/clockworkmod/.aromafm");
 		__system("cp /etc/aromafm.zip /emmc/clockworkmod/.aromafm/aromafm.zip");
-		install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
+                install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
+		}
 		break;
-	    case 6:
-		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v11\n");
+	    case 4:
+		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v12\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 08/21/2012 6:13 pm\n");
+		ui_print("Build Date: 08/23/2012 6:43 pm\n");
 	}
     }
 }
