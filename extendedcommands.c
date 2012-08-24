@@ -1341,6 +1341,37 @@ void show_advanced_menu()
    }
 }
 
+static void show_darkside_menu() {
+    static char* headers[] = {  "Darkside Tools (BE CAREFUL!)",
+                                "",
+                                NULL
+    };
+
+    char* list[] = { "darkside.cache.wipe",
+        "darkside.super.wipe_ext4 (BE CAREFUL!)"
+    };
+
+    int chosen_item = get_menu_selection(headers, list, 0, 0);
+    switch (chosen_item) {
+        case 0:
+                ensure_path_mounted("/emmc");
+                if( access( "/emmc/clockworkmod/.darkside/cachewipe.zip", F_OK ) != -1) {
+                install_zip("/emmc/clockworkmod/.darkside/cachewipe.zip");
+                } else {
+                ui_print("No darkside files found in /emmc/clockworkmod/.darkside");
+                }
+                break;
+        case 1:
+                ensure_path_mounted("/emmc");
+                if( access( "/emmc/clockworkmod/.darkside/superwipe.zip", F_OK ) != -1) {
+                install_zip("/emmc/clockworkmod/.darkside/superwipe.zip");
+                } else {
+                ui_print("No darkside files found in /emmc/clockworkmod/.darkside");
+                }
+                break;
+    }
+}
+
 void show_extras_menu()
 {
     static char* headers[] = {  "Extras Menu",
@@ -1354,6 +1385,7 @@ void show_extras_menu()
 //                            "keep root (/system/bin/su)",  // TODO: add these later
 //                            "keep root (/system/xbin/su)",
 			    "file manager",
+			    "darkside tools",
 			    "recovery info",
                             NULL
     };
@@ -1441,15 +1473,16 @@ void show_extras_menu()
 		if( access( "/emmc/clockworkmod/.aromafm/aromafm.zip", F_OK ) != -1) {
                 install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
 		} else {
-		__system("mkdir -p /emmc/clockworkmod/.aromafm");
-		__system("cp /etc/aromafm.zip /emmc/clockworkmod/.aromafm/aromafm.zip");
-                install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
+                ui_print("No aroma files found in /emmc/clockworkmod/.aromafm");
 		}
 		break;
 	    case 4:
+		show_darkside_menu();
+		break;
+	    case 5:
 		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v12\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 08/23/2012 6:43 pm\n");
+		ui_print("Build Date: 08/23/2012 9:30 pm\n");
 	}
     }
 }
