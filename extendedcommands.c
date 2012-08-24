@@ -1353,6 +1353,7 @@ void show_extras_menu()
 			    "show backup & restore progress (slower)",
 //                            "keep root (/system/bin/su)",  // TODO: add these later
 //                            "keep root (/system/xbin/su)",
+			    "file manager",
 			    "recovery info",
                             NULL
     };
@@ -1453,10 +1454,17 @@ void show_extras_menu()
 //    }
 //    		ensure_path_unmounted("/system");
 //    		return ret;
+//		break;
 	    case 5:
-		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v10\n");
+		ensure_path_mounted("/emmc");
+		__system("mkdir -p /emmc/clockworkmod/.aromafm");
+		__system("cp /etc/aromafm.zip /emmc/clockworkmod/.aromafm/aromafm.zip");
+		install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
+		break;
+	    case 6:
+		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v11\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 08/20/2012 6:00 pm\n");
+		ui_print("Build Date: 08/21/2012 6:13 pm\n");
 	}
     }
 }
