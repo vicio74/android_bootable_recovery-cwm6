@@ -1348,7 +1348,8 @@ static void show_darkside_menu() {
     };
 
     char* list[] = { "darkside.cache.wipe",
-        "darkside.super.wipe_ext4 (BE CAREFUL!)"
+        "darkside.super.wipe_ext4 (BE CAREFUL!)",
+	NULL
     };
 
     int chosen_item = get_menu_selection(headers, list, 0, 0);
@@ -1372,6 +1373,57 @@ static void show_darkside_menu() {
     }
 }
 
+static void show_efs_menu() {
+    static char* headers[] = {  "EFS Tools",
+                                "",
+                                NULL
+    };
+
+    char* list[] = { "backup /efs partition to internal",
+        	     "restore /efs partition from internal",
+		     "backup /efs partition to external",
+		     "restore /efs partition from external",
+		     NULL
+    };
+
+    int chosen_item = get_menu_selection(headers, list, 0, 0);
+    switch (chosen_item) {
+        case 0:
+                ensure_path_mounted("/emmc");
+		ensure_path_unmounted("/efs");
+		__system("backup-efs.sh /emmc");
+                ui_print("/emmc/clockworkmod/.efsbackup/efs.img created\n");
+                break;
+        case 1:
+                ensure_path_mounted("/emmc");
+                ensure_path_unmounted("/efs");
+                if( access("/emmc/clockworkmod/.efsbackup/efs.img", F_OK ) != -1 ) {
+                   __system("restore-efs.sh /emmc");
+                   ui_print("/emmc/clockworkmod/.efsbackup/efs.img restored to /efs");
+                } else {
+                   ui_print("No efs.img backup found.\n");
+                }
+                break;
+        case 2:
+                ensure_path_mounted("/sdcard");
+                ensure_path_unmounted("/efs");
+                __system("backup-efs.sh /sdcard");
+                ui_print("/sdcard/clockworkmod/.efsbackup/efs.img created\n");
+                break;
+        case 3:
+                ensure_path_mounted("/sdcard");
+                ensure_path_unmounted("/efs");
+                if( access("/sdcard/clockworkmod/.efsbackup/efs.img", F_OK ) != -1 ) {
+                   __system("restore-efs.sh /sdcard");
+                   ui_print("/sdcard/clockworkmod/.efsbackup/efs.img restored to /efs");
+                } else {
+                   ui_print("No efs.img backup found.\n");
+                }
+                break;
+    }
+}
+
+
 void show_extras_menu()
 {
     static char* headers[] = {  "Extras Menu",
@@ -1382,10 +1434,9 @@ void show_extras_menu()
     static char* list[] = { "disable install-recovery.sh",
                             "enable/disable one confirm",
                             "hide/show backup & restore progress",
-//                            "keep root (/system/bin/su)",  // TODO: add these later
-//                            "keep root (/system/xbin/su)",
-			    "file manager",
+			    "aroma file manager",
 			    "darkside tools",
+			    "/efs tools",
 			    "recovery info",
                             NULL
     };
@@ -1434,40 +1485,6 @@ void show_extras_menu()
                    ui_print("nandroid progress will be hidden\n");
                 }
                 break;
-//	    case 3:
-//		(ensure_path_mounted("/system")
-//    		int ret = 0;
-//    		struct stat st;
-//    		if (0 == lstat("/system/bin/su", &st)) {
-//        	    if (S_ISREG(st.st_mode)) {
-//            	        if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
-//                	    ui_show_text(1);
-//                	    ret = 1;
-//                	    if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/bin/su)")) {
-//                    		__system("chmod 6755 /system/bin/su");
-//            }
-//        }
-//    }
-//    		ensure_path_unmounted("/system");
-//    		return ret;
-//		break;
-//	    case 4:
-//		(ensure_path_mounted("/system")
-//    		int ret = 0;
-//    		struct stat st;
-//    		if (0 == lstat("/system/xbin/su", &st)) {
-//        	    if (S_ISREG(st.st_mode)) {
-//            	        if ((st.st_mode & (S_ISUID | S_ISGID)) != (S_ISUID | S_ISGID)) {
-//                	ui_show_text(1);
-//                	ret = 1;
-//                	if (confirm_selection("Root access possibly lost. Fix?", "Yes - Fix root (/system/xbin/su)")) {
-//                    	    __system("chmod 6755 /system/xbin/su");
-//            }
-//        }
-//    }
-//    		ensure_path_unmounted("/system");
-//    		return ret;
-//		break;
 	    case 3:
 		ensure_path_mounted("/emmc");
 		if( access( "/emmc/clockworkmod/.aromafm/aromafm.zip", F_OK ) != -1) {
@@ -1480,9 +1497,12 @@ void show_extras_menu()
 		show_darkside_menu();
 		break;
 	    case 5:
+		show_efs_menu();
+		break;
+	    case 6:
 		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v12\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 08/23/2012 9:30 pm\n");
+		ui_print("Build Date: 08/24/2012 10:48 pm\n");
 	}
     }
 }
