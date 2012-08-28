@@ -194,7 +194,7 @@ static void refresh_default_backup_handler() {
         strcpy(fmt, forced_backup_format);
     }
     else {
-        ensure_path_mounted("/sdcard");
+        ensure_path_mounted("/emmc");
         FILE* f = fopen(NANDROID_BACKUP_FORMAT_FILE, "r");
         if (NULL == f)
             return;
