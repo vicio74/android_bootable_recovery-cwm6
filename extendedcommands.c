@@ -1423,6 +1423,13 @@ static void show_efs_menu() {
     }
 }
 
+int create_customzip(const char* custompath)
+{
+    char command[PATH_MAX];
+    sprintf(command, "create_update_zip.sh %s", custompath);
+    __system(command);
+    return 0;
+}
 
 void show_extras_menu()
 {
@@ -1437,6 +1444,7 @@ void show_extras_menu()
 			    "aroma file manager",
 			    "darkside tools",
 			    "/efs tools",
+			    "create custom zip",
 			    "recovery info",
                             NULL
     };
@@ -1500,9 +1508,33 @@ void show_extras_menu()
 		show_efs_menu();
 		break;
 	    case 6:
-		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v12\n");
+		ensure_path_mounted("/system");
+		ensure_path_mounted("/emmc");
+                if (confirm_selection("Create a zip from system and boot?", "Yes - Create custom zip")) {
+		ui_print("Creating custom zip...\n");
+		ui_print("This may take a while. Be Patient.\n");
+                    char custom_path[PATH_MAX];
+                    time_t t = time(NULL);
+                    struct tm *tmp = localtime(&t);
+                    if (tmp == NULL)
+                    {
+                        struct timeval tp;
+                        gettimeofday(&tp, NULL);
+                        sprintf(custom_path, "/emmc/clockworkmod/zips/%d", tp.tv_sec);
+                    }
+                    else
+                    {
+                        strftime(custom_path, sizeof(custom_path), "/emmc/clockworkmod/zips/%F.%H.%M.%S", tmp);
+                    }
+                    create_customzip(custom_path);
+		ui_print("custom zip created in /emmc/clockworkmod/zips/\n");
+	}
+		ensure_path_unmounted("/system");
+		break;
+	    case 7:
+		ui_print("ClockworkMod Recovery 6.0.1.2 Touch v12.5\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 08/24/2012 10:48 pm\n");
+		ui_print("Build Date: 08/28/2012 1:00 am\n");
 	}
     }
 }
