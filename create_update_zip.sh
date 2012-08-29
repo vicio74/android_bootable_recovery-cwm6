@@ -8,6 +8,10 @@ dd if=/dev/block/mmcblk0p8 of=$1/uncompressed/boot.img
 
 # copy meta files to pwd
 cp -a /emmc/clockworkmod/zips/files/META-INF/ $1/uncompressed
+if [ ! -e /system/xbin/busybox ]
+then
+   cp /emmc/clockworkmod/zips/files/updater-script.no_busybox $1/compressed/META-INF/com/google/android/updater-script
+fi
 
 # copy /system files to pwd
 cp -a /system $1/uncompressed
