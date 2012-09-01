@@ -45,7 +45,6 @@
 #include "flashutils/flashutils.h"
 #include "dedupe/dedupe.h"
 #include "kyle.h"
-#include "recovery.h"
 
 static const struct option OPTIONS[] = {
   { "send_intent", required_argument, NULL, 's' },
