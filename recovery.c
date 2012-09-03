@@ -765,14 +765,11 @@ int run_script_file(void) {
 					}
 					ensure_path_mounted("/sd-ext");
 					ensure_path_mounted("/cache");
-					if (confirm_selection( "Confirm wipe?", "Yes - Wipe Dalvik Cache")) {
-						__system("rm -r /data/dalvik-cache");
-						__system("rm -r /cache/dalvik-cache");
-						__system("rm -r /sd-ext/dalvik-cache");
-						ui_print("Dalvik Cache wiped.\n");
-					}
+					__system("rm -r /data/dalvik-cache");
+					__system("rm -r /cache/dalvik-cache");
+					__system("rm -r /sd-ext/dalvik-cache");
+					ui_print("Dalvik Cache wiped.\n");
 					ensure_path_unmounted("/data");
-
 					ui_print("-- Dalvik Cache Wipe Complete!\n");
 				} else if (strcmp(value, "data") == 0 || strcmp(value, "/data") == 0 || strcmp(value, "factory") == 0 || strcmp(value, "factoryreset") == 0) {
 					ui_print("-- Wiping Data Partition...\n");
