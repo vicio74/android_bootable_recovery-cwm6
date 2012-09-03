@@ -802,7 +802,7 @@ int run_script_file(void) {
 						remove_nl = 0;
 					strncpy(value2, tok, line_len - remove_nl);
 					ui_print("Backup folder set to '%s'\n", value2);
-					sprintf(backup_path, "/sdcard/clockworkmod/backup/%s", value2);
+					sprintf(backup_path, "/emmc/clockworkmod/backup/%s", value2);
 				} else {
 					time_t t = time(NULL);
 					struct tm *tmp = localtime(&t);
@@ -810,11 +810,11 @@ int run_script_file(void) {
 					{
 						struct timeval tp;
 						gettimeofday(&tp, NULL);
-						sprintf(backup_path, "/sdcard/clockworkmod/backup/%d", tp.tv_sec);
+						sprintf(backup_path, "/emmc/clockworkmod/backup/%d", tp.tv_sec);
 					}
 					else
 					{
-						strftime(backup_path, sizeof(backup_path), "/sdcard/clockworkmod/backup/%F.%H.%M.%S", tmp);
+						strftime(backup_path, sizeof(backup_path), "/emmc/clockworkmod/backup/%F.%H.%M.%S", tmp);
 					}
 				}
 
@@ -899,7 +899,7 @@ int run_script_file(void) {
 				ui_print("Setting function disabled in CWMR: '%s' to '%s'\n", value1, value2);
 			} else if (strcmp(command, "mkdir") == 0) {
 				// Make directory (recursive)
-				ui_print("Recursive mkdir disabledin CWMR: '%s'\n", value);
+				ui_print("Recursive mkdir disabled in CWMR: '%s'\n", value);
 			} else if (strcmp(command, "reboot") == 0) {
 				// Reboot
 			} else if (strcmp(command, "cmd") == 0) {
