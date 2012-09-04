@@ -45,6 +45,7 @@
 #include "flashutils/flashutils.h"
 #include "dedupe/dedupe.h"
 #include "kyle.h"
+#include "recovery.h"
 
 static const struct option OPTIONS[] = {
   { "send_intent", required_argument, NULL, 's' },
@@ -298,8 +299,7 @@ finish_recovery(const char *send_intent) {
     sync();  // For good measure.
 }
 
-static int
-erase_volume(const char *volume) {
+int erase_volume(const char *volume) {
     ui_set_background(BACKGROUND_ICON_INSTALLING);
     ui_show_indeterminate_progress();
     ui_print("Formatting %s...\n", volume);
@@ -626,8 +626,7 @@ update_directory(const char* path, const char* unmount_when_done) {
     return result;
 }
 
-static void
-wipe_data(int confirm) {
+void wipe_data(int confirm) {
     if (confirm) {
         static char** title_headers = NULL;
 
@@ -988,10 +987,11 @@ prompt_and_wait() {
 	    case ITEM_ORS:
 		__system("ors-mount.sh");
 		if (0 == check_for_script_file()) {
-		run_script_file();
+		    if (0 != run_script_file())
+		    break;
 		} else {
-		ui_print("/cache/recovery/openrecoveryscript not found.\n");
-		break;
+		    ui_print("/cache/recovery/openrecoveryscript not found.\n");
+		    break;
 		}
 		usleep(2000000);
 		poweroff=0;
