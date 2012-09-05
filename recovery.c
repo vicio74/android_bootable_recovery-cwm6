@@ -745,6 +745,8 @@ int run_script_file(void) {
 			if (strcmp(command, "install") == 0) {
 				// Install zip
 				ui_print("Installing zip file '%s'\n", value);
+				ensure_path_mounted("/emmc");
+                                ensure_path_mounted("/sdcard");
 				ret_val = install_zip(value);
 				if (ret_val != INSTALL_SUCCESS) {
 					LOGE("Error installing zip file '%s'\n", value);
