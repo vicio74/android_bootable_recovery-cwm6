@@ -156,7 +156,16 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
             free(path);
             return StringValue(strdup(""));
         }
-        if (0 != format_volume("/emmc/.android_secure")) {
+	ensure_path_mounted("/emmc");
+	ensure_path_mounted("/sdcard");
+	struct stat sta;
+	if (0 != stat("/emmc/.android_secure", &sta) || 0 == stat("/sdcard/.android_secure", &sta)) {
+	#define ANDROID_SECURE "/sdcard/.android_secure"
+	}
+	else {
+	#define ANDROID_SECURE "/emmc/.android_secure"
+	}
+        if (0 != format_volume(ANDROID_SECURE)) {
             free(path);
             return StringValue(strdup(""));
         }
