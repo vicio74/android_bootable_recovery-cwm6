@@ -380,7 +380,7 @@ int nandroid_backup(const char* backup_path)
     }
     else
     {
-	ui_print("/emmc/.android_secure found!");
+	ui_print("/emmc/.android_secure found!\n");
         if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/emmc/.android_secure", 0)))
             return ret;
     }
