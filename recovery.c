@@ -667,14 +667,8 @@ void wipe_data(int confirm) {
     erase_volume("/sd-ext");
     ensure_path_mounted("/emmc");
     ensure_path_mounted("/sdcard");
-    struct stat sta;
-    if (0 == stat("/emmc/.android_secure", &sta)) {
-    #define ANDROID_SECURE "/emmc/.android_secure"
-    }
-    else if (0 == stat("/sdcard/.android_secure", &sta)) {
-    #define ANDROID_SECURE "/sdcard/.android_secure"
-    }
-    erase_volume(ANDROID_SECURE);
+    erase_volume("/emmc/.android_secure");
+    erase_volume("/sdcard/.android_secure");
     ui_print("Data wipe complete.\n");
 }
 

@@ -493,7 +493,7 @@ void show_extras_menu()
 	    case 8:
 		ui_print("ClockworkMod Recovery 6.0.1.3 Touch v13\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 09/05/2012 6:23 pm\n");
+		ui_print("Build Date: 09/11/2012 6:47 pm\n");
 	}
     }
 }
