@@ -380,7 +380,7 @@ int nandroid_backup(const char* backup_path)
     }
     else
     {
-	ui_print("/emmc/.android_secure found!\n");
+	ui_print("/emmc/.android_secure found! Backing up from /emmc...\n");
         if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/emmc/.android_secure", 0)))
             return ret;
     }
@@ -699,10 +699,6 @@ int nandroid_restore(const char* backup_path, int restore_boot, int restore_syst
 
     if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/emmc/.android_secure", 0))) {
 	return ret;
-    }
-
-    if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/sdcard/.android_secure", 0))) {
-        return ret;
     }
 
     if (restore_cache && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/cache", 0)))
