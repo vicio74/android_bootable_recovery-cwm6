@@ -118,11 +118,17 @@ static int mkyaffs2image_wrapper(const char* backup_path, const char* backup_fil
 
 static int tar_compress_wrapper(const char* backup_path, const char* backup_file_image, int callback) {
     char tmp[PATH_MAX];
-    sprintf(tmp, "cd $(dirname %s) ; touch %s.tar ; (tar cv %s $(basename %s) | split -a 1 -b 1000000000 /proc/self/fd/0 %s.tar.) 2> /proc/self/fd/1 ; exit $?", backup_path, backup_file_image, strcmp(backup_path, "/data") == 0 && is_data_media() ? "--exclude 'media'" : "", backup_path, backup_file_image);
+    if (strcmp(backup_path, "/data") == 0 && volume_for_path("/sdcard") == NULL)
+      sprintf(tmp, "cd $(dirname %s) ; tar cvf %s.tar --exclude 'media' $(basename %s) ; exit $?", backup_path, backup_file_image, backup_path);
+    else
+      sprintf(tmp, "cd $(dirname %s) ; tar cvf %s.tar $(basename %s) ; exit $?", backup_path, backup_file_image, backup_path);
+
+    //sprintf(tmp, "cd $(dirname %s) ; touch %s.tar ; (tar cv %s $(basename %s) | split -a 1 -b 1000000000 /proc/self/fd/0 %s.tar.) 2> /proc/self/fd/1 ; exit $?", 
+    //backup_path, backup_file_image, strcmp(backup_path, "/data") == 0 && is_data_media() ? "--exclude 'media'" : "", backup_path, backup_file_image);
 
     FILE *fp = __popen(tmp, "r");
     if (fp == NULL) {
-        ui_print("Unable to execute dedupe.\n");
+        ui_print("Unable to execute tar.\n");
         return -1;
     }
 
@@ -271,7 +277,7 @@ int nandroid_backup_partition_extended(const char* backup_path, const char* moun
     }
     if (0 != ret) {
         ui_print("Error while making a backup image of %s!\n", mount_point);
-//        return ret;
+        return ret;
     }
     return 0;
 }
@@ -429,7 +435,7 @@ static int tar_extract_wrapper(const char* backup_file_image, const char* backup
     sprintf(tmp, "cd $(dirname %s) ; cat %s* | tar xv ; exit $?", backup_path, backup_file_image);
     FILE *fp = __popen(tmp, "r");
     if (fp == NULL) {
-        ui_print("Unable to execute dedupe.\n");
+        ui_print("Unable to execute tar.\n");
         return -1;
     }
 
