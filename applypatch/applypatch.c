@@ -34,6 +34,14 @@ int SaveFileContents(const char* filename, FileContents file);
 static int LoadPartitionContents(const char* filename, FileContents* file);
 int ParseSha1(const char* str, uint8_t* digest);
 static ssize_t FileSink(unsigned char* data, ssize_t len, void* token);
+static int GenerateTarget(FileContents* source_file,
+                          const Value* source_patch_value,
+                          FileContents* copy_file,
+                          const Value* copy_patch_value,
+                          const char* source_filename,
+                          const char* target_filename,
+                          const uint8_t target_sha1[SHA_DIGEST_SIZE],
+                          size_t target_size);
 
 static int mtd_partitions_scanned = 0;
 
@@ -503,6 +511,7 @@ int applypatch_check(const char* filename,
                "sha1 sums; checking cache\n", filename);
 
         free(file.data);
+        file.data = NULL;
 
         // If the source file is missing or corrupted, it might be because
         // we were killed in the middle of patching it.  A copy of it
@@ -631,9 +640,10 @@ int applypatch(const char* source_filename,
 
     FileContents copy_file;
     FileContents source_file;
+    copy_file.data = NULL;
+    source_file.data = NULL;
     const Value* source_patch_value = NULL;
     const Value* copy_patch_value = NULL;
-    int made_copy = 0;
 
     // We try to load the target file into the source_file object.
     if (LoadFileContents(target_filename, &source_file,
@@ -643,6 +653,7 @@ int applypatch(const char* source_filename,
             // has the desired hash, nothing for us to do.
             printf("\"%s\" is already target; no patch needed\n",
                    target_filename);
+            free(source_file.data);
             return 0;
         }
     }
@@ -653,6 +664,7 @@ int applypatch(const char* source_filename,
         // Need to load the source file:  either we failed to load the
         // target file, or we did but it's different from the source file.
         free(source_file.data);
+        source_file.data = NULL;
         LoadFileContents(source_filename, &source_file,
                          RETOUCH_DO_MASK);
     }
@@ -667,6 +679,7 @@ int applypatch(const char* source_filename,
 
     if (source_patch_value == NULL) {
         free(source_file.data);
+        source_file.data = NULL;
         printf("source file is bad; trying copy\n");
 
         if (LoadFileContents(CACHE_TEMP_SOURCE, &copy_file,
@@ -685,16 +698,36 @@ int applypatch(const char* source_filename,
         if (copy_patch_value == NULL) {
             // fail.
             printf("copy file doesn't match source SHA-1s either\n");
+            free(copy_file.data);
             return 1;
         }
     }
 
+    int result = GenerateTarget(&source_file, source_patch_value,
+                                &copy_file, copy_patch_value,
+                                source_filename, target_filename,
+                                target_sha1, target_size);
+    free(source_file.data);
+    free(copy_file.data);
+
+    return result;
+}
+
+static int GenerateTarget(FileContents* source_file,
+                          const Value* source_patch_value,
+                          FileContents* copy_file,
+                          const Value* copy_patch_value,
+                          const char* source_filename,
+                          const char* target_filename,
+                          const uint8_t target_sha1[SHA_DIGEST_SIZE],
+                          size_t target_size) {
     int retry = 1;
     SHA_CTX ctx;
     int output;
     MemorySinkInfo msi;
     FileContents* source_to_use;
     char* outname;
+    int made_copy = 0;
 
     // assume that target_filename (eg "/system/app/Foo.apk") is located
     // on the same filesystem as its top-level directory ("/system").

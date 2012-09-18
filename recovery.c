@@ -632,7 +632,7 @@ void wipe_data(int confirm) {
 
         if (title_headers == NULL) {
             char* headers[] = { "Confirm wipe of all user data?",
-                                "  Confirm?.",
+                                "  THIS CAN NOT BE UNDONE.",
                                 "",
                                 NULL };
             title_headers = prepend_title((const char**)headers);

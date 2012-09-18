@@ -91,9 +91,8 @@ int ev_init(ev_callback input_cb, void *data)
 
             /* TODO: add ability to specify event masks. For now, just assume
              * that only EV_KEY and EV_REL event types are ever needed. */
-	    //commented out so the touch panel events are allowed through
             printf("Loading (%s): %i\n", de->d_name, ev_bits);
-           if (!test_bit(EV_KEY, ev_bits) && !test_bit(EV_REL, ev_bits) && !test_bit(EV_ABS, ev_bits)) {
+            if (!test_bit(EV_KEY, ev_bits) && !test_bit(EV_REL, ev_bits) && !test_bit(EV_ABS, ev_bits)) {
                 close(fd);
                 continue;
             }
@@ -164,7 +163,7 @@ int ev_get_input(int fd, short revents, struct input_event *ev)
         r = read(fd, ev, sizeof(*ev));
         if (r == sizeof(*ev)) {
             return 0;
-	}
+        }
     }
     return -1;
 }

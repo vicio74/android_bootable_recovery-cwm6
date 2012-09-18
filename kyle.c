@@ -396,12 +396,12 @@ void show_extras_menu()
     static char* list[] = { "disable install-recovery.sh",
                             "enable/disable one confirm",
                             "hide/show backup & restore progress",
-			    "aroma file manager",
-			    "darkside tools",
-			    "/efs tools",
-			    "create custom zip",
-			    "run custom openrecoveryscript",
-			    "recovery info",
+                            "aroma file manager",
+                            "darkside tools",
+                            "/efs tools",
+                            "create custom zip",
+                            "run custom openrecoveryscript",
+                            "recovery info",
                             NULL
     };
 
@@ -410,27 +410,26 @@ void show_extras_menu()
         int chosen_item = get_filtered_menu_selection(headers, list, 0, 0, sizeof(list) / sizeof(char*));
         if (chosen_item == GO_BACK)
             break;
-        switch (chosen_item)
-        {
+        switch (chosen_item) {
             case 0:
                 if (ensure_path_mounted("/system") != 0)
-                return 0;
+                  return 0;
                 int ret = 0;
                 struct stat st;
                 if (0 == lstat("/system/etc/install-recovery.sh", &st)) {
-                if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                ui_show_text(1);
-                ret = 1;
-                if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
-                __system("chmod -x /system/etc/install-recovery.sh");
-            }
-        }
-    }
+                  if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
+                    ui_show_text(1);
+                    ret = 1;
+                    if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
+                      __system("chmod -x /system/etc/install-recovery.sh");
+                    }
+                  }
+                }
                 ensure_path_unmounted("/system");
                 return ret;
                 break;
-	    case 1:
-		ensure_path_mounted("/emmc");
+            case 1:
+                ensure_path_mounted("/emmc");
                 if( access("/emmc/clockworkmod/.one_confirm", F_OK ) != -1 ) {
                    __system("rm -rf /emmc/clockworkmod/.one_confirm");
                    ui_print("one confirm disabled\n");
@@ -438,8 +437,8 @@ void show_extras_menu()
                    __system("touch /emmc/clockworkmod/.one_confirm");
                    ui_print("one confirm enabled\n");
                 }
-		break;
-	    case 2:
+                break;
+            case 2:
                 ensure_path_mounted("/emmc");
                 if( access("/emmc/clockworkmod/.hidenandroidprogress", F_OK ) != -1 ) {
                    __system("rm -rf /emmc/clockworkmod/.hidenandroidprogress");
@@ -449,51 +448,49 @@ void show_extras_menu()
                    ui_print("nandroid progress will be hidden\n");
                 }
                 break;
-	    case 3:
-		ensure_path_mounted("/emmc");
-		if( access( "/emmc/clockworkmod/.aromafm/aromafm.zip", F_OK ) != -1) {
-                install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
-		} else {
-                ui_print("No aroma files found in /emmc/clockworkmod/.aromafm");
-		}
-		break;
-	    case 4:
-		show_darkside_menu();
-		break;
-	    case 5:
-		show_efs_menu();
-		break;
-	    case 6:
-		ensure_path_mounted("/system");
-		ensure_path_mounted("/emmc");
+            case 3:
+                ensure_path_mounted("/emmc");
+                if( access( "/emmc/clockworkmod/.aromafm/aromafm.zip", F_OK ) != -1) {
+                  install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
+                } else {
+                  ui_print("No aroma files found in /emmc/clockworkmod/.aromafm");
+                }
+                break;
+            case 4:
+                show_darkside_menu();
+                break;
+            case 5:
+                show_efs_menu();
+                break;
+            case 6:
+                ensure_path_mounted("/system");
+                ensure_path_mounted("/emmc");
                 if (confirm_selection("Create a zip from system and boot?", "Yes - Create custom zip")) {
-		ui_print("Creating custom zip...\n");
-		ui_print("This may take a while. Be Patient.\n");
-                    char custom_path[PATH_MAX];
-                    time_t t = time(NULL);
-                    struct tm *tmp = localtime(&t);
-                    if (tmp == NULL)
-                    {
-                        struct timeval tp;
-                        gettimeofday(&tp, NULL);
-                        sprintf(custom_path, "/emmc/clockworkmod/zips/%d", tp.tv_sec);
-                    }
-                    else
-                    {
-                        strftime(custom_path, sizeof(custom_path), "/emmc/clockworkmod/zips/%F.%H.%M.%S", tmp);
-                    }
-                    create_customzip(custom_path);
-		ui_print("custom zip created in /emmc/clockworkmod/zips/\n");
-	}
-		ensure_path_unmounted("/system");
-		break;
-	    case 7:
-		show_custom_ors_menu("/emmc");
-		break;
-	    case 8:
-		ui_print("ClockworkMod Recovery 6.0.1.3 Touch v13\n");
-		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 09/11/2012 6:47 pm\n");
-	}
+                ui_print("Creating custom zip...\n");
+                ui_print("This may take a while. Be Patient.\n");
+                char custom_path[PATH_MAX];
+                time_t t = time(NULL);
+                struct tm *tmp = localtime(&t);
+                if (tmp == NULL) {
+                  struct timeval tp;
+                  gettimeofday(&tp, NULL);
+                  sprintf(custom_path, "/emmc/clockworkmod/zips/%d", tp.tv_sec);
+                } else {
+                  strftime(custom_path, sizeof(custom_path), "/emmc/clockworkmod/zips/%F.%H.%M.%S", tmp);
+                }
+                create_customzip(custom_path);
+                ui_print("custom zip created in /emmc/clockworkmod/zips/\n");
+                }
+                ensure_path_unmounted("/system");
+                break;
+            case 7:
+                show_custom_ors_menu("/emmc");
+                break;
+            case 8:
+                ui_print("ClockworkMod Recovery 6.0.1.3\n");
+                ui_print("Created By: Vicio74\n");
+                ui_print("Based on  : CWM from sk8erwitskil, CyanogenMod Recovery\n");
+                ui_print("Build Date: 16/09/2012\n");
+        }
     }
 }

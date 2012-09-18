@@ -50,8 +50,8 @@ static int gShowBackButton = 0;
 
 #define MIN_LOG_ROWS 3
 
-#define CHAR_WIDTH 10
-#define CHAR_HEIGHT 36
+#define CHAR_WIDTH BOARD_RECOVERY_CHAR_WIDTH
+#define CHAR_HEIGHT BOARD_RECOVERY_CHAR_HEIGHT
 
 #define UI_WAIT_KEY_TIMEOUT_SEC    3600
 #define UI_KEY_REPEAT_INTERVAL 80
@@ -70,7 +70,9 @@ static gr_surface *gInstallationOverlay;
 static gr_surface *gProgressBarIndeterminate;
 static gr_surface gProgressBarEmpty;
 static gr_surface gProgressBarFill;
+#ifdef BOARD_TOUCH_RECOVERY
 static gr_surface gVirtualKeys; // surface for our virtual key buttons
+#endif
 static gr_surface gBackground;
 static int ui_has_initialized = 0;
 static int ui_log_stdout = 1;
@@ -86,7 +88,9 @@ static const struct { gr_surface* surface; const char *name; } BITMAPS[] = {
     { &gBackgroundIcon[BACKGROUND_ICON_FIRMWARE_ERROR], "icon_firmware_error" },
     { &gProgressBarEmpty,               "progress_empty" },
     { &gProgressBarFill,                "progress_fill" },
+#ifdef BOARD_TOUCH_RECOVERY
     { &gVirtualKeys,                    "virtual_keys" },
+#endif
     { &gBackground,                "stitch" },
     { NULL,                             NULL },
 };
@@ -128,10 +132,6 @@ static unsigned long key_last_repeat[KEY_MAX + 1], key_press_time[KEY_MAX + 1];
 static volatile char key_pressed[KEY_MAX + 1];
 
 static void update_screen_locked(void);
-
-#ifdef BOARD_TOUCH_RECOVERY
-#include "../../vendor/koush/recovery/touch.c"
-#endif
 
 // Return the current time as a double (including fractions of a second).
 static double now() {
@@ -228,6 +228,7 @@ static void draw_progress_locked()
     }
 }
 
+#ifdef BOARD_TOUCH_RECOVERY
 // Draw the virtual keys on the screen. Does not flip pages.
 // Should only be called with gUpdateMutex locked.
 static void draw_virtualkeys_locked()
@@ -239,6 +240,7 @@ static void draw_virtualkeys_locked()
     int iconY = (gr_fb_height() - iconHeight);
     gr_blit(surface, 0, 0, iconWidth, iconHeight, iconX, iconY);
 }
+#endif
 
 #define LEFT_ALIGN 0
 #define CENTER_ALIGN 1
@@ -282,13 +284,18 @@ static void draw_screen_locked(void)
         // gr_color(0, 0, 0, 160);
         // gr_fill(0, 0, gr_fb_width(), gr_fb_height());
 
-	gr_surface surface = gVirtualKeys;
-        int total_rows = (gr_fb_height() / CHAR_HEIGHT) - (gr_get_height(surface) / CHAR_HEIGHT) - 1;
+        int total_rows = gr_fb_height() / CHAR_HEIGHT;
+
+#ifdef BOARD_TOUCH_RECOVERY
+        gr_surface surface = gVirtualKeys;
+        total_rows = total_rows - (gr_get_height(surface) / CHAR_HEIGHT) - 1;
+#endif
+
         int i = 0;
         int j = 0;
         int offset = 0;         // offset of separating bar under menus
         int row = 0;            // current row that we are drawing on
-	if (show_menu) {
+        if (show_menu) {
             gr_color(MENU_TEXT_COLOR);
             int batt_level = 0;
             batt_level = get_batt_stats();
@@ -350,7 +357,9 @@ static void draw_screen_locked(void)
             draw_text_line(start_row + r, text[(cur_row + r) % MAX_ROWS], LEFT_ALIGN);
         }
     }
+#ifdef BOARD_TOUCH_RECOVERY
     draw_virtualkeys_locked(); //added to draw the virtual keys
+#endif
 }
 
 // Redraw everything on the screen and flip the screen (make it visible).
@@ -454,16 +463,14 @@ static int input_callback(int fd, short revents, void *data)
     struct input_event ev;
     int ret;
     int fake_key = 0;
-    gr_surface surface = gVirtualKeys;
 
     ret = ev_get_input(fd, revents, &ev);
     if (ret)
         return -1;
 
-#ifdef BOARD_TOUCH_RECOVERY
-    if (touch_handle_input(fd, ev))
-      return 0;
-#endif
+//	ui_print("ev type %X   ", ev.type);
+//	ui_print("code  %X   ", ev.code);
+//	ui_print("value %X\n", ev.value);
 
     if (ev.type == EV_SYN) {
         return 0;
@@ -492,12 +499,18 @@ static int input_callback(int fd, short revents, void *data)
         rel_sum = 0;
     }
 
-    if (ev.type == 3 && ev.code == 48 && ev.value != 0) {
+#ifdef BOARD_TOUCH_RECOVERY
+    gr_surface surface = gVirtualKeys;
+    if (ev.type == EV_ABS
+			&& (ev.code == ABS_MT_TOUCH_MAJOR || ev.code == ABS_MT_TRACKING_ID)
+			&& ev.value != 0 && ev.value != -1) {
         if (in_touch == 0) {
             in_touch = 1; //starting to track touch...
             reset_gestures();
         }
-    } else if (ev.type == 3 && ev.code == 48 && ev.value == 0) {
+    } else if (ev.type == EV_ABS
+				&& (ev.code == ABS_MT_TOUCH_MAJOR || ev.code == ABS_MT_TRACKING_ID)
+				&& (ev.value == 0 || ev.value == -1)) {
             //finger lifted! lets run with this
             ev.type = EV_KEY; //touch panel support!!!
             int keywidth = gr_get_width(surface) / 4;
@@ -534,17 +547,17 @@ static int input_callback(int fd, short revents, void *data)
             ev.value = 1;
             in_touch = 0;
             reset_gestures();
-    } else if (ev.type == 3 && ev.code == 53) {
+    } else if (ev.type == EV_ABS && ev.code == ABS_MT_POSITION_X) {
         old_x = touch_x;
         touch_x = ev.value;
         if (old_x != 0)
             diff_x += touch_x - old_x;
 
-	if (touch_y < (gr_fb_height() - gr_get_height(surface))) {
+	    if (touch_y < (gr_fb_height() - gr_get_height(surface))) {
             if (diff_x > (gr_fb_width() / 4)) {
                 slide_right = 1;
                 reset_gestures();
-    } else if(diff_x < ((gr_fb_width() / 4) * -1)) {
+        } else if(diff_x < ((gr_fb_width() / 4) * -1)) {
                 slide_left = 1;
                 reset_gestures();
             }
@@ -552,18 +565,18 @@ static int input_callback(int fd, short revents, void *data)
             input_buttons();
             //reset_gestures();
         }
-    } else if (ev.type == 3 && ev.code == 54) {
+    } else if (ev.type == EV_ABS && ev.code == ABS_MT_POSITION_Y) {
         old_y = touch_y;
         touch_y = ev.value;
         if (old_y != 0)
             diff_y += touch_y - old_y;
 
-    if (touch_y < (gr_fb_height() - gr_get_height(surface))) {
+        if (touch_y < (gr_fb_height() - gr_get_height(surface))) {
             if (diff_y > 25) {
                 ev.code = KEY_DOWN;
                 ev.type = EV_KEY;
                 reset_gestures();
-	} else if (diff_y < -25) {
+            } else if (diff_y < -25) {
                 ev.code = KEY_UP;
                 ev.type = EV_KEY;
                 reset_gestures();
@@ -573,9 +586,14 @@ static int input_callback(int fd, short revents, void *data)
             //reset_gestures();
         }
     }
+#endif
 
     if (ev.type != EV_KEY || ev.code > KEY_MAX)
         return 0;
+
+    if (ev.value == 2) {
+        boardEnableKeyRepeat = 0;
+    }
 
     pthread_mutex_lock(&key_queue_mutex);
     if (!fake_key) {
@@ -630,21 +648,20 @@ void ui_init(void)
     ui_has_initialized = 1;
     gr_init();
     ev_init(input_callback, NULL);
-#ifdef BOARD_TOUCH_RECOVERY
-    touch_init();
-#endif
 
-    gr_surface surface = gVirtualKeys;
     text_col = text_row = 0;
     text_rows = gr_fb_height() / CHAR_HEIGHT;
     max_menu_rows = text_rows - MIN_LOG_ROWS;
-#ifdef BOARD_TOUCH_RECOVERY
-    max_menu_rows = get_max_menu_rows(max_menu_rows);
-#endif
+//#ifdef BOARD_TOUCH_RECOVERY
+//    max_menu_rows = get_max_menu_rows(max_menu_rows);
+//#endif
     if (max_menu_rows > MENU_MAX_ROWS)
         max_menu_rows = MENU_MAX_ROWS;
     if (text_rows > MAX_ROWS) text_rows = MAX_ROWS;
+#ifdef BOARD_TOUCH_RECOVERY
+    gr_surface surface = gVirtualKeys;
     text_rows = text_rows - (gr_get_height(surface) / CHAR_HEIGHT) - 1;
+#endif
     text_top = 1;
 
     text_cols = gr_fb_width() / CHAR_WIDTH;
@@ -1162,11 +1179,11 @@ int ui_get_selected_item() {
 }
 
 int ui_handle_key(int key, int visible) {
-#ifdef BOARD_TOUCH_RECOVERY
-    return touch_handle_key(key, visible);
-#else
+//#ifdef BOARD_TOUCH_RECOVERY
+//    return touch_handle_key(key, visible);
+//#else
     return device_handle_key(key, visible);
-#endif
+//#endif
 }
 
 void ui_delete_line() {
@@ -1182,6 +1199,7 @@ void ui_increment_frame() {
         (gInstallingFrame + 1) % ui_parameters.installing_frames;
 }
 
+#ifdef BOARD_TOUCH_RECOVERY
 int input_buttons()
 {
     int final_code = 0;
@@ -1230,6 +1248,7 @@ int input_buttons()
         return 0;
     }
 }
+#endif
 
 int get_batt_stats(void)
 {
