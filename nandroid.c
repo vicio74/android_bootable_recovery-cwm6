@@ -363,26 +363,28 @@ int nandroid_backup(const char* backup_path)
     }
 
     ensure_path_mounted("/emmc");
-    ensure_path_mounted("/sdcard");
-    if (0 != stat("/sdcard/.android_secure", &s))
-    {
-        ui_print("No /sdcard/.android_secure found. Looking for /emmc/.android_secure...\n");
-    }
-    else
-    {
-        if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/sdcard/.android_secure", 0)))
-            return ret;
-    }
-
-    if (0 != stat("/emmc/.android_secure", &s))
-    {
-        ui_print("No /emmc/.android_secure found.\n");
-    }
-    else
-    {
-	ui_print("/emmc/.android_secure found! Backing up from /emmc...\n");
-        if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/emmc/.android_secure", 0)))
-            return ret;
+    if( access( "/emmc/clockworkmod/.is_as_external", F_OK ) != -1) {
+	ensure_path_mounted("/sdcard");
+    	if (0 != stat("/sdcard/.android_secure", &s))
+    	{
+            ui_print("No /sdcard/.android_secure found...\n");
+    	}
+    	else
+    	{
+            if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/sdcard/.android_secure", 0)))
+                return ret;
+    	}
+    } else {
+	ensure_path_mounted("/emmc");
+    	if (0 != stat("/emmc/.android_secure", &s))
+    	{
+            ui_print("No /emmc/.android_secure found...\n");
+    	}
+    	else
+    	{
+            if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/emmc/.android_secure", 0)))
+                return ret;
+    	}
     }
 
     if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/cache", 0)))
@@ -697,8 +699,16 @@ int nandroid_restore(const char* backup_path, int restore_boot, int restore_syst
             return ret;
     }
 
-    if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/emmc/.android_secure", 0))) {
-	return ret;
+    ensure_path_mounted("/emmc");
+    if( access( "/emmc/clockworkmod/.is_as_external", F_OK ) != -1) {
+	if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/sdcard/.android_secure", 0))) {
+	    return ret;
+    	}
+    }
+    else {
+	if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/emmc/.android_secure", 0))) {
+            return ret;
+        }
     }
 
     if (restore_cache && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/cache", 0)))

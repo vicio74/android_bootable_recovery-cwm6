@@ -396,6 +396,7 @@ void show_extras_menu()
     static char* list[] = { "disable install-recovery.sh",
                             "enable/disable one confirm",
                             "hide/show backup & restore progress",
+			    "set android_secure internal/external",
 			    "aroma file manager",
 			    "darkside tools",
 			    "/efs tools",
@@ -450,6 +451,16 @@ void show_extras_menu()
                 }
                 break;
 	    case 3:
+                ensure_path_mounted("/emmc");
+                if( access("/emmc/clockworkmod/.is_as_external", F_OK ) != -1 ) {
+                   __system("rm -rf /emmc/clockworkmod/.is_as_external");
+                   ui_print("android_secure will be set to internal\n");
+                } else {
+                   __system("touch /emmc/clockworkmod/.is_as_external");
+                   ui_print("android_secure will be set to external\n");
+                }
+                break;
+	    case 4:
 		ensure_path_mounted("/emmc");
 		if( access( "/emmc/clockworkmod/.aromafm/aromafm.zip", F_OK ) != -1) {
                 install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
@@ -457,13 +468,13 @@ void show_extras_menu()
                 ui_print("No aroma files found in /emmc/clockworkmod/.aromafm");
 		}
 		break;
-	    case 4:
+	    case 5:
 		show_darkside_menu();
 		break;
-	    case 5:
+	    case 6:
 		show_efs_menu();
 		break;
-	    case 6:
+	    case 7:
 		ensure_path_mounted("/system");
 		ensure_path_mounted("/emmc");
                 if (confirm_selection("Create a zip from system and boot?", "Yes - Create custom zip")) {
@@ -487,13 +498,13 @@ void show_extras_menu()
 	}
 		ensure_path_unmounted("/system");
 		break;
-	    case 7:
+	    case 8:
 		show_custom_ors_menu("/emmc");
 		break;
-	    case 8:
-		ui_print("ClockworkMod Recovery 6.0.1.3 Touch v13\n");
+	    case 9:
+		ui_print("ClockworkMod Recovery 6.0.1.4 Touch v13.3\n");
 		ui_print("Created By: sk8erwitskil (Kyle Laplante)\n");
-		ui_print("Build Date: 09/16/2012 8:15 pm\n");
+		ui_print("Build Date: 09/25/2012 7:15 pm\n");
 	}
     }
 }
