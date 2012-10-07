@@ -189,7 +189,8 @@ static int dedupe_compress_wrapper(const char* backup_path, const char* backup_f
     return __pclose(fp);
 }
 
-static nandroid_backup_handler default_backup_handler = dedupe_compress_wrapper;
+//static nandroid_backup_handler default_backup_handler = dedupe_compress_wrapper;
+static nandroid_backup_handler default_backup_handler = tar_compress_wrapper;
 static char forced_backup_format[5] = "";
 void nandroid_force_backup_format(const char* fmt) {
     strcpy(forced_backup_format, fmt);
@@ -208,10 +209,10 @@ static void refresh_default_backup_handler() {
         fclose(f);
     }
     fmt[3] = NULL;
-    if (0 == strcmp(fmt, "tar"))
-        default_backup_handler = tar_compress_wrapper;
-    else
+    if (0 == strcmp(fmt, "dup"))
         default_backup_handler = dedupe_compress_wrapper;
+    else
+        default_backup_handler = tar_compress_wrapper;
 }
 
 static nandroid_backup_handler get_backup_handler(const char *backup_path) {
@@ -386,7 +387,7 @@ int nandroid_backup(const char* backup_path)
     }
     else
     {
-	ui_print("/emmc/.android_secure found!\n");
+        ui_print("/emmc/.android_secure found! Backing up from /emmc...\n");
         if (0 != (ret = nandroid_backup_partition_extended(backup_path, "/emmc/.android_secure", 0)))
             return ret;
     }
@@ -704,12 +705,12 @@ int nandroid_restore(const char* backup_path, int restore_boot, int restore_syst
     }
 
     if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/emmc/.android_secure", 0))) {
-	return ret;
+	      return ret;
     }
 
-    if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/sdcard/.android_secure", 0))) {
-        return ret;
-    }
+    //if (restore_data && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/sdcard/.android_secure", 0))) {
+    //    return ret;
+    //}
 
     if (restore_cache && 0 != (ret = nandroid_restore_partition_extended(backup_path, "/cache", 0)))
         return ret;
