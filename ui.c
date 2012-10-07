@@ -572,11 +572,11 @@ static int input_callback(int fd, short revents, void *data)
             diff_y += touch_y - old_y;
 
         if (touch_y < (gr_fb_height() - gr_get_height(surface))) {
-            if (diff_y > 25) {
+            if (diff_y > 35) {
                 ev.code = KEY_DOWN;
                 ev.type = EV_KEY;
                 reset_gestures();
-            } else if (diff_y < -25) {
+            } else if (diff_y < -35) {
                 ev.code = KEY_UP;
                 ev.type = EV_KEY;
                 reset_gestures();
