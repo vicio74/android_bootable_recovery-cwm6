@@ -487,10 +487,11 @@ void show_extras_menu()
                 show_custom_ors_menu("/emmc");
                 break;
             case 8:
-                ui_print("ClockworkMod Recovery 6.0.1.3\n");
+                ui_print("ClockworkMod Recovery 6.0.1.4\n");
                 ui_print("Created By: Vicio74\n");
                 ui_print("Based on  : CWM from sk8erwitskil, CyanogenMod Recovery\n");
-                ui_print("Build Date: 16/09/2012\n");
+                //ui_print("Build Date: 16/09/2012\n");
+                ui_print("Build Date: %s %s\n",__DATE__,__TIME__);
         }
     }
 }
