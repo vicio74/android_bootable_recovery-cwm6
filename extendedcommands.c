@@ -750,6 +750,16 @@ int format_unknown_device(const char *device, const char* path, const char *fs_t
             }
             return format_ext2_device(device);
         }
+
+        if (strcmp("vfat", fs_type) == 0) {
+            LOGI("Formatting vfat device.\n");
+            if (0 != ensure_path_unmounted(path)) {
+                LOGE("Error while unmounting %s.\n", path);
+                return -12;
+            }
+            return format_rfs_device(device, path);
+        }
+
     }
 
     if (0 != ensure_path_mounted(path))
