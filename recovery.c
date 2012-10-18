@@ -53,6 +53,7 @@ static const struct option OPTIONS[] = {
   { "wipe_data", no_argument, NULL, 'w' },
   { "wipe_cache", no_argument, NULL, 'c' },
   { "show_text", no_argument, NULL, 't' },
+  { "wipe_all", no_argument, NULL, 'W' },
   { NULL, 0, NULL, 0 },
 };
 
@@ -1079,7 +1080,7 @@ main(int argc, char **argv) {
     int previous_runs = 0;
     const char *send_intent = NULL;
     const char *update_package = NULL;
-    int wipe_data = 0, wipe_cache = 0;
+    int wipe_data = 0, wipe_cache = 0, wipe_all = 0;
 
     LOGI("Checking arguments.\n");
     int arg;
@@ -1095,6 +1096,7 @@ main(int argc, char **argv) {
         break;
         case 'c': wipe_cache = 1; break;
         case 't': ui_show_text(1); break;
+        case 'W': wipe_all = 1; break;
         case '?':
             LOGE("Invalid command argument\n");
             continue;
@@ -1134,6 +1136,13 @@ main(int argc, char **argv) {
     if (update_package != NULL) {
         status = install_package(update_package);
         if (status != INSTALL_SUCCESS) ui_print("Installation aborted.\n");
+    } else if (wipe_all) {
+        if (device_wipe_data()) status = INSTALL_ERROR;
+        if (erase_volume("/data")) status = INSTALL_ERROR;
+        if (has_datadata() && erase_volume("/datadata")) status = INSTALL_ERROR;
+        if (erase_volume("/cache")) status = INSTALL_ERROR;
+        if (erase_volume("/emmc")) status = INSTALL_ERROR;
+        if (status != INSTALL_SUCCESS) ui_print("All wipe failed.\n");
     } else if (wipe_data) {
         if (device_wipe_data()) status = INSTALL_ERROR;
         if (erase_volume("/data")) status = INSTALL_ERROR;
