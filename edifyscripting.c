@@ -158,14 +158,18 @@ Value* FormatFn(const char* name, State* state, int argc, Expr* argv[]) {
         }
     	ensure_path_mounted("/emmc");
     	ensure_path_mounted("/sdcard");
-        if (0 != format_volume("/emmc/.android_secure")) {
-	    free(path);
-	    return StringValue(strdup(""));
-        }
-        if (0 != format_volume("/sdcard/.android_secure")) {
-            free(path);
-            return StringValue(strdup(""));
-        }
+	if( access( "/emmc/clockworkmod/.is_as_external", F_OK ) != -1) {
+	    if (0 != format_volume("/sdcard/.android_secure")) {
+	        free(path);
+	        return StringValue(strdup(""));
+            }
+	}
+	else {
+            if (0 != format_volume("/emmc/.android_secure")) {
+                free(path);
+                return StringValue(strdup(""));
+            }
+	}
     }
 
 done:

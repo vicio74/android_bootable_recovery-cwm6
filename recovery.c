@@ -668,8 +668,12 @@ void wipe_data(int confirm) {
     erase_volume("/sd-ext");
     ensure_path_mounted("/emmc");
     ensure_path_mounted("/sdcard");
-    erase_volume("/emmc/.android_secure");
-    erase_volume("/sdcard/.android_secure");
+    if( access( "/emmc/clockworkmod/.is_as_external", F_OK ) != -1) {
+	erase_volume("/sdcard/.android_secure");
+    }
+    else {
+	erase_volume("/emmc/.android_secure");
+    }
     ui_print("Data wipe complete.\n");
 }
 
