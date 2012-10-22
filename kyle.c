@@ -363,6 +363,33 @@ int run_custom_ors(const char* ors_script) {
 	return ret_val;
 }
 
+void show_bootanimation_menu(const char *ba_path)
+{
+    if (ensure_path_mounted(ba_path) != 0) {
+        LOGE("Can't mount %s\n", ba_path);
+        return;
+    }
+
+    static char* headers[] = {  "Choose a bootanimation",
+                                "",
+                                NULL
+    };
+
+    char* ba_file = choose_file_menu(ba_path, ".zip", headers);
+    if (ba_file == NULL)
+        return;
+
+    if (confirm_selection("Confirm change bootanimation?", "Yes - Change")) {
+        char tmp[PATH_MAX];
+	sprintf(tmp, "change_ba.sh %s", ba_file);
+	ensure_path_mounted("/system");
+	__system(tmp);
+	ensure_path_unmounted("/system");
+	ui_print("Bootanimation has been changed.\n");
+    }
+}
+
+
 void show_custom_ors_menu(const char* ors_path)
 {
     if (ensure_path_mounted(ors_path) != 0) {
@@ -393,9 +420,10 @@ void show_extras_menu()
                                 NULL
     };
 
-    static char* list[] = { "disable install-recovery.sh",
+    static char* list[] = { "Change bootanimation",
                             "enable/disable one confirm",
                             "hide/show backup & restore progress",
+			    			"set android_secure internal/external",
                             "aroma file manager",
                             "darkside tools",
                             "/efs tools",
@@ -412,21 +440,7 @@ void show_extras_menu()
             break;
         switch (chosen_item) {
             case 0:
-                if (ensure_path_mounted("/system") != 0)
-                  return 0;
-                int ret = 0;
-                struct stat st;
-                if (0 == lstat("/system/etc/install-recovery.sh", &st)) {
-                  if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                    ui_show_text(1);
-                    ret = 1;
-                    if (confirm_selection("ROM may flash stock recovery on boot. Fix?", "Yes - Disable recovery flash")) {
-                      __system("chmod -x /system/etc/install-recovery.sh");
-                    }
-                  }
-                }
-                ensure_path_unmounted("/system");
-                return ret;
+				show_bootanimation_menu("/emmc/");
                 break;
             case 1:
                 ensure_path_mounted("/emmc");
@@ -450,19 +464,29 @@ void show_extras_menu()
                 break;
             case 3:
                 ensure_path_mounted("/emmc");
+                if( access("/emmc/clockworkmod/.is_as_external", F_OK ) != -1 ) {
+                   __system("rm -rf /emmc/clockworkmod/.is_as_external");
+                   ui_print("android_secure will be set to internal\n");
+                } else {
+                   __system("touch /emmc/clockworkmod/.is_as_external");
+                   ui_print("android_secure will be set to external\n");
+                }
+                break;
+	    	case 4:
+				ensure_path_mounted("/emmc");
                 if( access( "/emmc/clockworkmod/.aromafm/aromafm.zip", F_OK ) != -1) {
                   install_zip("/emmc/clockworkmod/.aromafm/aromafm.zip");
                 } else {
                   ui_print("No aroma files found in /emmc/clockworkmod/.aromafm");
                 }
                 break;
-            case 4:
+	    	case 5:
                 show_darkside_menu();
                 break;
-            case 5:
+            case 6:
                 show_efs_menu();
                 break;
-            case 6:
+            case 7:
                 ensure_path_mounted("/system");
                 ensure_path_mounted("/emmc");
                 if (confirm_selection("Create a zip from system and boot?", "Yes - Create custom zip")) {
@@ -483,14 +507,13 @@ void show_extras_menu()
                 }
                 ensure_path_unmounted("/system");
                 break;
-            case 7:
+            case 8:
                 show_custom_ors_menu("/emmc");
                 break;
-            case 8:
-                ui_print("ClockworkMod Recovery 6.0.1.4\n");
+            case 9:
+                ui_print("ClockworkMod Recovery 6.0.1.5 Touch\n");
                 ui_print("Created By: Vicio74\n");
                 ui_print("Based on  : CWM from sk8erwitskil, CyanogenMod Recovery\n");
-                //ui_print("Build Date: 16/09/2012\n");
                 ui_print("Build Date: %s %s\n",__DATE__,__TIME__);
         }
     }
