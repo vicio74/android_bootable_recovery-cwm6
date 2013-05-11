@@ -411,3 +411,16 @@ install_package(const char* path)
     }
     return result;
 }
+
+int
+install_package_nocheck(const char* path)
+{
+    int err;
+    ZipArchive zip;
+    err = mzOpenZipArchive(path, &zip);
+    if (err != 0) {
+        LOGE("Can't open %s\n(%s)\n", path, err != -1 ? strerror(err) : "bad");
+        return INSTALL_CORRUPT;
+    }
+    return try_update_binary(path, &zip);
+}

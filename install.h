@@ -18,8 +18,10 @@
 #define RECOVERY_INSTALL_H_
 
 #include "common.h"
+#include "minzip/Zip.h"
 
 enum { INSTALL_SUCCESS, INSTALL_ERROR, INSTALL_CORRUPT, INSTALL_UPDATE_SCRIPT_MISSING, INSTALL_UPDATE_BINARY_MISSING };
 int install_package(const char *root_path);
+int install_package_nocheck(const char* path);
 
 #endif  // RECOVERY_INSTALL_H_
